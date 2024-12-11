@@ -34,7 +34,7 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
             onClose(); // Close the modal
         } catch (err) {
             console.error(err);
-            alert('Failed to upload images');
+            alert('Failed to upload images!!');
         }
     };
 
