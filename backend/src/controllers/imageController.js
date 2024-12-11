@@ -4,13 +4,13 @@ const path = require('path');
 exports.uploadImages = async (req, res) => {
     try {
         const { category } = req.body;
-        const files = req.files; // array of uploaded images
+        const files = req.files;
 
         if (!files || !category) {
             return res.status(400).json({ error: 'Category and files are required.' });
         }
 
-        const imageDocs = await Promise.all(files.map(async (file) => {
+        const imageDocs = await Promise.all(files.map(file => {
             const newImage = new Image({
                 filename: file.originalname,
                 filepath: file.path,
@@ -22,6 +22,17 @@ exports.uploadImages = async (req, res) => {
         res.json({ message: 'Images uploaded successfully', images: imageDocs });
     } catch (err) {
         console.error(err);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+exports.getImagesByCategory = async (req, res) => {
+    const { category } = req.params;
+    try {
+        const images = await Image.find({ category });
+        res.json({ images });
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Server error' });
     }
 };
