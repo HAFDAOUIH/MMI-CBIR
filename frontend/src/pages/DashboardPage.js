@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { fetchImagesByCategory } from '../services/imageService';
+import { fetchImagesByCategory } from '../services/imageService'; // Make sure this function is defined in your service file
 import Navbar from '../components/Navbar';
 import UploadModal from '../components/UploadModal';
 
 function DashboardPage() {
     const [images, setImages] = useState([]);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const defaultCategory = 'forest'; // You can change this or make it dynamic
+    const defaultCategory = 'forest'; // Change this to a dynamic category if needed
 
     const loadImages = () => {
         fetchImagesByCategory(defaultCategory).then(data => {
@@ -27,8 +27,7 @@ function DashboardPage() {
     };
 
     const handleUploadSuccess = () => {
-        // After successful upload, reload images
-        loadImages();
+        loadImages(); // Refresh images in the gallery after successful upload
     };
 
     return (
@@ -36,12 +35,20 @@ function DashboardPage() {
             <Navbar onUploadClick={handleUploadClick} />
             <h1 style={{ textAlign: 'center' }}>Image Gallery - {defaultCategory}</h1>
             <div style={{display: 'flex', flexWrap: 'wrap', justifyContent: 'center'}}>
-                {images.map(img => (
-                    <div key={img._id} style={{margin: '10px', textAlign: 'center'}}>
-                        <img src={`http://localhost:5000/${img.filepath}`} alt={img.filename} width="200" />
-                        <p>{img.filename}</p>
-                    </div>
-                ))}
+                {images.map(img => {
+                    const imageUrl = `http://localhost:5000/uploads/${img.filepath.split('/').pop()}?${new Date().getTime()}`;
+                    console.log('Generated image URL:', imageUrl);  // Log the image URL
+                    return (
+                        <div key={img._id} style={{ margin: '10px', textAlign: 'center' }}>
+                            <img
+                                src={imageUrl}
+                                alt={img.filename}
+                                width="200"
+                            />
+                            <p>{img.filename}</p>
+                        </div>
+                    );
+                })}
             </div>
 
             <UploadModal
