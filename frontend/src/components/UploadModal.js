@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
-import axios from '../services/api'; // This should be your configured axios instance
+import axios from '../services/api'; // Axios instance
 
 function UploadModal({ isOpen, onClose, onUploadSuccess }) {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [category, setCategory] = useState('');
 
+    const categories = ['Grass', 'Field', 'Industry', 'RiverLake', 'Forest', 'Resident', 'Parkin']; // Predefined categories
+
     if (!isOpen) return null;
 
     const handleFileChange = (e) => {
         setSelectedFiles(e.target.files);
+    };
+
+    const handleCategoryChange = (e) => {
+        setCategory(e.target.value);
     };
 
     const handleUpload = async () => {
@@ -46,8 +52,6 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
         }
     };
 
-
-
     return (
         <div style={{
             position: 'fixed',
@@ -68,13 +72,19 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
                     onChange={handleFileChange}
                     style={{ display: 'block', marginBottom: '10px' }}
                 />
-                <input
-                    type="text"
-                    placeholder="Category"
+
+                {/* Dropdown to select the category */}
+                <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    onChange={handleCategoryChange}
                     style={{ display: 'block', marginBottom: '10px', width: '100%' }}
-                />
+                >
+                    <option value="">Select Category</option>
+                    {categories.map((categoryOption, index) => (
+                        <option key={index} value={categoryOption}>{categoryOption}</option>
+                    ))}
+                </select>
+
                 <button onClick={handleUpload} style={{ marginRight: '10px' }}>Upload</button>
                 <button onClick={onClose}>Cancel</button>
             </div>
