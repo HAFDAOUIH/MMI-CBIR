@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const upload = require('../middleware/uploadMiddleware');
-const { uploadImages } = require('../controllers/imageController');
-const { getImagesByCategory } = require('../controllers/imageController');
+const { uploadImages, getImagesByCategory } = require('../controllers/imageController'); // Ensure these controllers exist
+const upload = require('../middleware/uploadMiddleware'); // Ensure this is configured properly
 
-router.post('/upload', upload.array('images', 10), uploadImages);
+// Route to handle image uploads
+router.post('/upload', upload.array('images', 10), uploadImages); // 'images' is the field name that matches the formData key
+
+// Route to fetch images by category
 router.get('/:category', getImagesByCategory);
 
 module.exports = router;

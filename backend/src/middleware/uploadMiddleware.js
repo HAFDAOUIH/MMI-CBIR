@@ -1,18 +1,19 @@
 const multer = require('multer');
 const path = require('path');
 
-// Define storage for multer
+// Configure storage settings for multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        // Save uploads in a folder named "uploads" inside backend
+        // Ensure the 'uploads' folder exists and is writable
         cb(null, path.join(__dirname, '../../uploads'));
     },
     filename: (req, file, cb) => {
-        // Keep original name or generate a unique name
+        // Use a unique name for the file
         cb(null, Date.now() + '-' + file.originalname);
-    }
+    },
 });
 
-const upload = multer({ storage });
+// Limit file size to 10MB
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 module.exports = upload;
