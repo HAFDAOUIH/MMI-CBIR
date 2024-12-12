@@ -10,3 +10,4 @@ export const fetchImagesByCategory = async (category) => {
         return { images: [] };  // Return empty array if error occurs
     }
 };
+
