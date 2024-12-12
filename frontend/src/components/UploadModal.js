@@ -24,19 +24,29 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
         formData.append('category', category);
 
         try {
-            await axios.post('/api/images/upload', formData, {
+            // Log the form data to the console to inspect it before sending it
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);  // Check that the data is correct
+            }
+
+            // Send the POST request to the backend
+            const response = await axios.post('/api/images/upload', formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                    'Content-Type': 'multipart/form-data',
+                },
             });
+
+            console.log('Upload response:', response.data);  // Inspect response from backend
             alert('Images uploaded successfully!');
-            onUploadSuccess(); // Tell parent to refresh images
+            onUploadSuccess(); // Refresh images in the gallery
             onClose(); // Close the modal
         } catch (err) {
-            console.error(err);
-            alert('Failed to upload images!!');
+            console.error('Upload failed:', err);
+            alert('Failed to upload images');
         }
     };
+
+
 
     return (
         <div style={{
