@@ -1,11 +1,12 @@
+// ''
 import React, { useState } from 'react';
-import axios from '../services/api'; // Axios instance
+import axios from '../services/api';
 
 function UploadModal({ isOpen, onClose, onUploadSuccess }) {
     const [selectedFiles, setSelectedFiles] = useState([]);
-    const [category, setCategory] = useState('');
+    const [category, setCategory] = useState('Forest');
 
-    const categories = ['Grass', 'Field', 'Industry', 'RiverLake', 'Forest', 'Resident', 'Parkin']; // Predefined categories
+    const categories = ['Grass', 'Field', 'Industry', 'RiverLake', 'Forest', 'Resident', 'Parking'];
 
     if (!isOpen) return null;
 
@@ -30,24 +31,16 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
         formData.append('category', category);
 
         try {
-            // Log the form data to the console to inspect it before sending it
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);  // Check that the data is correct
-            }
-
-            // Send the POST request to the backend
             const response = await axios.post('/api/images/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-
-            console.log('Upload response:', response.data);  // Inspect response from backend
             alert('Images uploaded successfully!');
-            onUploadSuccess(); // Refresh images in the gallery
-            onClose(); // Close the modal
+            onUploadSuccess();
+            onClose();
         } catch (err) {
-            console.error('Upload failed:', err);
+            console.error('Upload failed:', err.response?.data || err.message);
             alert('Failed to upload images');
         }
     };
@@ -56,37 +49,40 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
         <div style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
-            background: 'rgba(0,0,0,0.5)'
+            background: 'rgba(0,0,0,0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
         }}>
             <div style={{
                 background: '#fff',
-                margin: '100px auto',
                 padding: '20px',
-                width: '300px',
-                borderRadius: '8px'
+                width: '400px',
+                borderRadius: '8px',
+                boxShadow: '0px 4px 6px rgba(0,0,0,0.1)',
             }}>
                 <h3>Upload Images</h3>
                 <input
                     type="file"
+                    name="images"
                     multiple
                     onChange={handleFileChange}
                     style={{ display: 'block', marginBottom: '10px' }}
                 />
-
-                {/* Dropdown to select the category */}
                 <select
+                    name="category"
                     value={category}
                     onChange={handleCategoryChange}
                     style={{ display: 'block', marginBottom: '10px', width: '100%' }}
                 >
-                    <option value="">Select Category</option>
-                    {categories.map((categoryOption, index) => (
-                        <option key={index} value={categoryOption}>{categoryOption}</option>
+                    {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                            {cat}
+                        </option>
                     ))}
                 </select>
-
-                <button onClick={handleUpload} style={{ marginRight: '10px' }}>Upload</button>
-                <button onClick={onClose}>Cancel</button>
+                <button onClick={handleUpload} style={{ marginRight: '10px', backgroundColor: '#ff6347', padding: '8px 16px', color: 'white' }}>Upload</button>
+                <button onClick={onClose} style={{ padding: '8px 16px' }}>Cancel</button>
             </div>
         </div>
     );

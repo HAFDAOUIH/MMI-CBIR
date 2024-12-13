@@ -1,5 +1,5 @@
 .App {
-  text-align: center;
+  text-align: center; /*test*/
 }
 
 .App-logo {
@@ -35,4 +35,20 @@
   to {
     transform: rotate(360deg);
   }
+}
+/* Pagination button style */
+.pagination a {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  margin: 0 5px;
+  text-decoration: none;
+  color: #333;
+  border-radius: 4px;
+  background-color: #f1f1f1;
+  transition: background-color 0.3s ease;
+}
+
+.pagination a:hover {
+  background-color: #ff6347;
+  color: white;
 }

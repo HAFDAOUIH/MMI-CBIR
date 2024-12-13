@@ -1,15 +1,15 @@
+// ''
 import React from 'react';
 
-function CategoryMenu({ categories, selectedCategory, onCategorySelect }) {
+const CategoryMenu = ({ categories, selectedCategory, onCategorySelect }) => {
     return (
-        <div style={{ textAlign: 'center', margin: '20px' }}>
-            <h3>Select Category</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
             <select
                 value={selectedCategory}
                 onChange={(e) => onCategorySelect(e.target.value)}
-                style={{ padding: '5px 10px', fontSize: '16px' }}
+                style={{ padding: '10px', fontSize: '1rem', borderRadius: '4px', border: '1px solid #ccc' }}
             >
-                {categories.map(category => (
+                {categories.map((category) => (
                     <option key={category} value={category}>
                         {category}
                     </option>
@@ -17,6 +17,6 @@ function CategoryMenu({ categories, selectedCategory, onCategorySelect }) {
             </select>
         </div>
     );
-}
+};
 
 export default CategoryMenu;
