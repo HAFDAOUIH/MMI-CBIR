@@ -4,7 +4,7 @@ const { uploadImages, getImagesByCategory} = require('../controllers/imageContro
 const upload = require('../middleware/uploadMiddleware'); // Ensure this is configured properly
 
 // Route to handle image uploads
-router.post('/upload', upload.array('images', 10), uploadImages); // 'images' is the field name that matches the formData key
+router.post('/upload', upload.array('images', 400), uploadImages); // 'images' is the field name that matches the formData key
 
 // Route to fetch images by category
 router.get('/:category', getImagesByCategory);

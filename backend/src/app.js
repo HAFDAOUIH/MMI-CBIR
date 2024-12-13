@@ -9,7 +9,7 @@ const imageRoutes = require('./routes/images');
 // Middleware
 app.use(cors({
     origin: 'http://localhost:3000',  // Allow requests from your frontend
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 }));
 app.use(express.json()); // For parsing application/json
