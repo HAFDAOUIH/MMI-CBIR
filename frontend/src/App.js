@@ -1,4 +1,3 @@
-// ''
 import React from 'react';
 import DashboardPage from './pages/DashboardPage';
 import Footer from './components/Footer'; // Import Footer component
