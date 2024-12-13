@@ -1,5 +1,5 @@
 .App {
-  text-align: center;
+  text-align: center; /*test*/
 }
 
 .App-logo {
@@ -35,4 +35,46 @@
   to {
     transform: rotate(360deg);
   }
+}
+/* Pagination button style */
+.pagination a {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  margin: 0 5px;
+  text-decoration: none;
+  color: #333;
+  border-radius: 4px;
+  background-color: #f1f1f1;
+  transition: background-color 0.3s ease;
+}
+
+.pagination a:hover {
+  background-color: #ff6347;
+  color: white;
+}
+body, html {
+  height: 100%;  /* Ensure the page takes the full height of the browser */
+  margin: 0;
+}
+
+.App {
+  min-height: 100%; /* Ensure the app takes the full height */
+  display: flex;
+  flex-direction: column; /* Arrange content vertically */
+}
+
+.content {
+  flex: 1; /* Make the content area flexible so it can grow */
+  padding-bottom: 80px; /* To avoid overlap with footer */
+}
+
+footer {
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  font-size: 1rem;
 }

@@ -1,22 +1,29 @@
 import React from 'react';
 
-function CategoryMenu({ categories, selectedCategory, onCategorySelect }) {
+const CategoryMenu = ({ categories, selectedCategory, onCategorySelect }) => {
     return (
-        <div style={{ textAlign: 'center', margin: '20px' }}>
-            <h3>Select Category</h3>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
             <select
                 value={selectedCategory}
                 onChange={(e) => onCategorySelect(e.target.value)}
-                style={{ padding: '5px 10px', fontSize: '16px' }}
+                style={{
+                    padding: '12px 20px',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc',
+                    backgroundColor: '#f1f1f1',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                }}
             >
-                {categories.map(category => (
-                    <option key={category} value={category}>
+                {categories.map((category) => (
+                    <option key={category} value={category} style={{ padding: '10px' }}>
                         {category}
                     </option>
                 ))}
             </select>
         </div>
     );
-}
+};
 
 export default CategoryMenu;
