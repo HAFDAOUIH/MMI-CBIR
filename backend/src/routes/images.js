@@ -1,3 +1,4 @@
+// ''
 const express = require('express');
 const router = express.Router();
 const { uploadImages, getImagesByCategory} = require('../controllers/imageController'); // Ensure these controllers exist
