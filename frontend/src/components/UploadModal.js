@@ -35,7 +35,6 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            alert('Images uploaded successfully!');
             onUploadSuccess();
             onClose();
         } catch (err) {

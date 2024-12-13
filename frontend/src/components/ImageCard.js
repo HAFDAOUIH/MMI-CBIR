@@ -12,7 +12,6 @@ function ImageCard({ image, onDeleteSuccess, onEditClick }) {
                 onDeleteSuccess(image._id); // Pass image ID for successful deletion
             }
         } catch (error) {
-            console.error('Error deleting the image', error);
             alert('Failed to delete the image');
         }
     };

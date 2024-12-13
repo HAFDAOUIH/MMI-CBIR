@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { fetchImagesByCategory } from '../services/imageService';
 import Navbar from '../components/Navbar';
@@ -6,6 +5,11 @@ import UploadModal from '../components/UploadModal';
 import CategoryMenu from '../components/CategoryMenu';
 import ImageCard from '../components/ImageCard';
 import { fabric } from 'fabric'; // Fabric.js for image transformations
+import { toast, ToastContainer } from 'react-toastify'; // Import React-Toastify
+import 'react-toastify/dist/ReactToastify.css'; // Import CSS for Toastify
+import Modal from 'react-modal';  // Correct import
+
+Modal.setAppElement('#root');
 
 function DashboardPage() {
     const [images, setImages] = useState([]);
@@ -16,9 +20,9 @@ function DashboardPage() {
     const [selectedCategory, setSelectedCategory] = useState('Forest');
     const [currentPage, setCurrentPage] = useState(1);
     const [imagesPerPage] = useState(21);
-    const [openSnackbar, setOpenSnackbar] = useState(false); // Snackbar state for notification
-    const [snackbarMessage, setSnackbarMessage] = useState('');
     const [fabricCanvas, setFabricCanvas] = useState(null); // Canvas for image editing
+    const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message state
+    const [openSnackbar, setOpenSnackbar] = useState(false); // Snackbar open state
 
     const loadImages = (category) => {
         fetchImagesByCategory(category).then(data => {
@@ -38,33 +42,14 @@ function DashboardPage() {
         setIsUploadModalOpen(false);
     };
 
-    const handleDeleteSuccess = (imageId) => {
-        setImages(images.filter(img => img._id !== imageId));
-        setSnackbarMessage('Image deleted successfully');
-        setOpenSnackbar(true);
-    };
-
     const handleUploadSuccess = () => {
         loadImages(selectedCategory);
-        setSnackbarMessage('Image uploaded successfully');
-        setOpenSnackbar(true); // Show success notification
+        toast.success('Image uploaded successfully!');
     };
 
     const handleCategorySelect = (category) => {
         setSelectedCategory(category);
     };
-
-    // Pagination Logic
-    const indexOfLastImage = currentPage * imagesPerPage;
-    const indexOfFirstImage = indexOfLastImage - imagesPerPage;
-    const currentImages = images.slice(indexOfFirstImage, indexOfLastImage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(images.length / imagesPerPage); i++) {
-        pageNumbers.push(i);
-    }
 
     const handleImageEdit = (imageUrl) => {
         const canvas = new fabric.Canvas('canvas', {
@@ -81,10 +66,37 @@ function DashboardPage() {
     const handleSaveEdits = async () => {
         const editedImage = fabricCanvas.toDataURL(); // Get the edited image data
         // Send the edited image data to the server or update state
-        // You can implement the upload logic or store the edited image
-        setSnackbarMessage('Image edits saved successfully');
-        setOpenSnackbar(true);
     };
+
+    // Pagination Logic
+    const indexOfLastImage = currentPage * imagesPerPage;
+    const indexOfFirstImage = indexOfLastImage - imagesPerPage;
+    const currentImages = images.slice(indexOfFirstImage, indexOfLastImage);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const pageNumbers = [];
+    for (let i = 1; i <= Math.ceil(images.length / imagesPerPage); i++) {
+        pageNumbers.push(i);
+    }
+
+    const handleDeleteClick = (imageId) => {
+        // Perform the deletion logic here (e.g., API request)
+        setImages(images.filter(img => img._id !== imageId)); // Update images state after deletion
+
+        // Set the snackbar message and show the notification
+        setSnackbarMessage('Image deleted successfully!');
+        setOpenSnackbar(true);
+
+        // Automatically hide the snackbar after 5 seconds
+        setTimeout(() => {
+            setOpenSnackbar(false);
+        }, 5000);
+    };
+
+    useEffect(() => {
+        loadImages(); // Load images when the component mounts
+    }, []);
 
     return (
         <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f7f7f7' }}>
@@ -125,7 +137,12 @@ function DashboardPage() {
                 justifyContent: 'center'
             }}>
                 {currentImages.map(img => (
-                    <ImageCard key={img._id} image={img} onDeleteSuccess={handleDeleteSuccess} onEditClick={handleImageEdit} />
+                    <ImageCard
+                        key={img._id}
+                        image={img}
+                        onDeleteSuccess={handleDeleteClick} // Directly delete without confirmation
+                        onEditClick={handleImageEdit}
+                    />
                 ))}
             </div>
 
@@ -154,13 +171,27 @@ function DashboardPage() {
                 </nav>
             </div>
 
-            {/* Image Edit Canvas */}
-            <div>
-                <canvas id="canvas"></canvas>
-                <button onClick={handleSaveEdits} style={{ padding: '10px 20px', marginTop: '10px' }}>
-                    Save Edits
-                </button>
-            </div>
+            {/* Snackbar Notification */}
+            {openSnackbar && (
+                <div style={{
+                    position: 'fixed',
+                    top: '100px',
+                    left: '8%',
+                    transform: 'translateX(-50%)', // Centers the snackbar horizontally
+                    backgroundColor: 'red',
+                    color: 'white',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    fontSize: '16px',
+                    zIndex: 9999, // Ensure the snackbar appears on top of other elements
+                }}>
+                    {snackbarMessage}
+                </div>
+            )}
+
+            {/* React-Toastify Notifications */}
+            <ToastContainer />
 
             <UploadModal
                 isOpen={isUploadModalOpen}
