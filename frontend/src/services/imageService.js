@@ -11,3 +11,13 @@ export const fetchImagesByCategory = async (category) => {
     }
 };
 
+export const fetchImageDescriptors = async (imageId) => {
+    try {
+        // Ensure this matches the backend route for descriptors
+        const response = await axios.get(`/api/images/descriptors/${imageId}`);
+        return response.data; // Return descriptor data
+    } catch (error) {
+        console.error('Error fetching descriptors for image:', error);
+        throw error; // Rethrow error for frontend handling
+    }
+};

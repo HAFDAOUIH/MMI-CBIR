@@ -49,4 +49,31 @@ router.delete('/delete/:id', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+router.get('/descriptors/:id', async (req, res) => {
+    try {
+        console.log('Fetching descriptors for ID:', req.params.id); // Debugging
+        const image = await Image.findById(req.params.id);
+        if (!image) {
+            console.log('Image not found:', req.params.id); // Debugging
+            return res.status(404).json({ message: 'Image not found' });
+        }
+
+        console.log('Descriptors found:', {
+            histogram: image.histogram,
+            dominantColors: image.dominantColors,
+            textureDescriptors: image.textureDescriptors,
+            huMoments: image.huMoments,
+        });
+
+        res.json({
+            histogram: image.histogram,
+            dominantColors: image.dominantColors,
+            textureDescriptors: image.textureDescriptors,
+            huMoments: image.huMoments,
+        });
+    } catch (error) {
+        console.error('Error fetching descriptors:', error);
+        res.status(500).json({ message: 'Error fetching descriptors' });
+    }
+});
 module.exports = router;

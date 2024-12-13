@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from '../services/api'; // Your axios instance
+import DescriptorModal from './DescriptorModal'; // Import the modal for descriptors
 
 function ImageCard({ image, onDeleteSuccess, onEditClick }) {
+    const [showDescriptors, setShowDescriptors] = useState(false); // State to control the modal
     const imageUrl = `http://localhost:5000/uploads/${image.filepath.split('/').pop()}?${new Date().getTime()}`;
 
     const handleDelete = async () => {
         try {
-            // Call the delete API endpoint
             const response = await axios.delete(`/api/images/delete/${image._id}`);
             if (response.status === 200) {
-                onDeleteSuccess(image._id); // Pass image ID for successful deletion
+                onDeleteSuccess(image._id);
             }
         } catch (error) {
             alert('Failed to delete the image');
@@ -32,24 +33,38 @@ function ImageCard({ image, onDeleteSuccess, onEditClick }) {
     };
 
     const handleEdit = () => {
-        // Trigger edit function when clicking the Edit button
         onEditClick(imageUrl);
     };
 
+    // Open descriptors modal on image click
+    const handleImageClick = () => {
+        console.log('Image clicked!'); // Add this
+        setShowDescriptors(true);
+    };
+
+
     return (
-        <div style={{
-            backgroundColor: '#fff',
-            padding: '10px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
-        }}>
+        <div
+            style={{
+                backgroundColor: '#fff',
+                padding: '10px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                textAlign: 'center',
+            }}
+        >
             <img
                 src={imageUrl}
                 alt={image.filename}
-                style={{ width: '100%', borderRadius: '8px', transition: 'transform 0.3s' }}
-                onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-                onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
+                style={{
+                    width: '100%',
+                    borderRadius: '8px',
+                    transition: 'transform 0.3s',
+                    cursor: 'pointer', // Indicate the image is clickable
+                }}
+                onMouseOver={(e) => (e.target.style.transform = 'scale(1.05)')}
+                onMouseOut={(e) => (e.target.style.transform = 'scale(1)')}
+                onClick={handleImageClick} // Show descriptors on click
             />
             <p>{image.filename}</p>
 
@@ -96,6 +111,15 @@ function ImageCard({ image, onDeleteSuccess, onEditClick }) {
                     Edit
                 </button>
             </div>
+
+            {/* Descriptor Modal */}
+            {showDescriptors && (
+                <DescriptorModal
+                    show={showDescriptors}
+                    onHide={() => setShowDescriptors(false)}
+                    imageId={image._id} // Pass the image ID to fetch descriptors
+                />
+            )}
         </div>
     );
 }
