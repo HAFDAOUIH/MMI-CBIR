@@ -68,7 +68,8 @@ function DashboardPage() {
 
     const handleDeleteClick = (imageId) => {
         setImages(images.filter(img => img._id !== imageId)); // Remove the image from the state
-        toast.success('Image deleted successfully!');
+        toast.error('Image deleted successfully!');
+
     };
 
     // Pagination Logic
