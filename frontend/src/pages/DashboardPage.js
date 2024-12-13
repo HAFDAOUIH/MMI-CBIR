@@ -4,10 +4,11 @@ import Navbar from '../components/Navbar';
 import UploadModal from '../components/UploadModal';
 import CategoryMenu from '../components/CategoryMenu';
 import ImageCard from '../components/ImageCard';
-import { fabric } from 'fabric'; // Fabric.js for image transformations
 import { toast, ToastContainer } from 'react-toastify'; // Import React-Toastify
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS for Toastify
-import Modal from 'react-modal';  // Correct import
+import Modal from 'react-modal';
+import Cropper from 'react-cropper';
+import 'cropperjs/dist/cropper.css';
 
 Modal.setAppElement('#root');
 
@@ -20,9 +21,9 @@ function DashboardPage() {
     const [selectedCategory, setSelectedCategory] = useState('Forest');
     const [currentPage, setCurrentPage] = useState(1);
     const [imagesPerPage] = useState(21);
-    const [fabricCanvas, setFabricCanvas] = useState(null); // Canvas for image editing
-    const [snackbarMessage, setSnackbarMessage] = useState(''); // Snackbar message state
-    const [openSnackbar, setOpenSnackbar] = useState(false); // Snackbar open state
+    const [imageToEdit, setImageToEdit] = useState(null); // The image to edit
+    const [isEditing, setIsEditing] = useState(false); // Whether the edit modal is open
+    const [cropper, setCropper] = useState(null); // Store the cropper instance
 
     const loadImages = (category) => {
         fetchImagesByCategory(category).then(data => {
@@ -51,21 +52,23 @@ function DashboardPage() {
         setSelectedCategory(category);
     };
 
-    const handleImageEdit = (imageUrl) => {
-        const canvas = new fabric.Canvas('canvas', {
-            width: 800,
-            height: 600,
-        });
-
-        fabric.Image.fromURL(imageUrl, (img) => {
-            canvas.add(img);
-            setFabricCanvas(canvas); // Store the canvas instance for further use
-        });
+    const handleImageEdit = (image) => {
+        setImageToEdit(image); // Set the image to edit
+        setIsEditing(true); // Open the modal
     };
 
-    const handleSaveEdits = async () => {
-        const editedImage = fabricCanvas.toDataURL(); // Get the edited image data
-        // Send the edited image data to the server or update state
+    const handleSaveEdits = () => {
+        if (cropper) {
+            const croppedImageUrl = cropper.getCroppedCanvas().toDataURL(); // Get the cropped image
+            setIsEditing(false); // Close the modal
+            // Do something with the cropped image (e.g., save to the server or update the state)
+            toast.success('Image edited successfully!');
+        }
+    };
+
+    const handleDeleteClick = (imageId) => {
+        setImages(images.filter(img => img._id !== imageId)); // Remove the image from the state
+        toast.success('Image deleted successfully!');
     };
 
     // Pagination Logic
@@ -79,24 +82,6 @@ function DashboardPage() {
     for (let i = 1; i <= Math.ceil(images.length / imagesPerPage); i++) {
         pageNumbers.push(i);
     }
-
-    const handleDeleteClick = (imageId) => {
-        // Perform the deletion logic here (e.g., API request)
-        setImages(images.filter(img => img._id !== imageId)); // Update images state after deletion
-
-        // Set the snackbar message and show the notification
-        setSnackbarMessage('Image deleted successfully!');
-        setOpenSnackbar(true);
-
-        // Automatically hide the snackbar after 5 seconds
-        setTimeout(() => {
-            setOpenSnackbar(false);
-        }, 5000);
-    };
-
-    useEffect(() => {
-        loadImages(); // Load images when the component mounts
-    }, []);
 
     return (
         <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f7f7f7' }}>
@@ -140,8 +125,8 @@ function DashboardPage() {
                     <ImageCard
                         key={img._id}
                         image={img}
-                        onDeleteSuccess={handleDeleteClick} // Directly delete without confirmation
-                        onEditClick={handleImageEdit}
+                        onDeleteSuccess={handleDeleteClick}
+                        onEditClick={() => handleImageEdit(img)} // Open edit modal on click
                     />
                 ))}
             </div>
@@ -171,23 +156,65 @@ function DashboardPage() {
                 </nav>
             </div>
 
-            {/* Snackbar Notification */}
-            {openSnackbar && (
-                <div style={{
-                    position: 'fixed',
-                    top: '100px',
-                    left: '8%',
-                    transform: 'translateX(-50%)', // Centers the snackbar horizontally
-                    backgroundColor: 'red',
-                    color: 'white',
-                    padding: '10px 20px',
-                    borderRadius: '5px',
-                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                    fontSize: '16px',
-                    zIndex: 9999, // Ensure the snackbar appears on top of other elements
+            {/* Image Edit Modal */}
+            {isEditing && (
+                <Modal isOpen={isEditing} onRequestClose={() => setIsEditing(false)} style={{
+                    overlay: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                    },
+                    content: {
+                        position: 'absolute',
+                        top: '10%',
+                        left: '10%',
+                        right: '10%',
+                        bottom: '10%',
+                        padding: '20px',
+                        background: '#fff',
+                        borderRadius: '10px',
+                        border: 'none',
+                        maxWidth: '80%',
+                    },
                 }}>
-                    {snackbarMessage}
-                </div>
+                    <h3>Edit Image</h3>
+                    {/* Cropper for image editing */}
+                    <Cropper
+                        src={imageToEdit ? `http://localhost:5000/uploads/${imageToEdit.filepath.split('/').pop()}` : ''}
+                        style={{ height: 400, width: '100%' }}
+                        initialAspectRatio={1}
+                        guides={false}
+                        cropBoxResizable={true}
+                        onInitialized={(instance) => setCropper(instance)}
+                    />
+                    <div style={{ marginTop: '20px' }}>
+                        <button
+                            onClick={handleSaveEdits}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#4CAF50',
+                                color: '#fff',
+                                borderRadius: '4px',
+                                border: 'none',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Save Edits
+                        </button>
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#f44336',
+                                color: '#fff',
+                                borderRadius: '4px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                marginLeft: '10px',
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </Modal>
             )}
 
             {/* React-Toastify Notifications */}
