@@ -6,10 +6,18 @@ const CategoryMenu = ({ categories, selectedCategory, onCategorySelect }) => {
             <select
                 value={selectedCategory}
                 onChange={(e) => onCategorySelect(e.target.value)}
-                style={{ padding: '10px', fontSize: '1rem', borderRadius: '4px', border: '1px solid #ccc' }}
+                style={{
+                    padding: '12px 20px',
+                    fontSize: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc',
+                    backgroundColor: '#f1f1f1',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                }}
             >
                 {categories.map((category) => (
-                    <option key={category} value={category}>
+                    <option key={category} value={category} style={{ padding: '10px' }}>
                         {category}
                     </option>
                 ))}

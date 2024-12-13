@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Link } from 'react-router-dom'; // Use Link for navigation instead of anchor tags
 
 const Navbar = ({ onUploadClick }) => {
     const navbarStyles = {
@@ -61,15 +61,13 @@ const Navbar = ({ onUploadClick }) => {
     return (
         <nav style={navbarStyles}>
             <div className="navbar-left">
-                <a href="/" style={logoStyles}>
-                    My Image Dashboard
-                </a>
+                <Link to="/" style={logoStyles}>MMI-CBIR Dashboard</Link>
             </div>
             <div className="navbar-center">
                 <ul style={navLinksStyles}>
-                    <li style={navLinkItemStyles}><a href="/home" style={navLinkStyles}>Home</a></li>
-                    <li style={navLinkItemStyles}><a href="/about" style={navLinkStyles}>About</a></li>
-                    <li style={navLinkItemStyles}><a href="/gallery" style={navLinkStyles}>Gallery</a></li>
+                    <li style={navLinkItemStyles}><Link to="/" style={navLinkStyles}>Home</Link></li>
+                    <li style={navLinkItemStyles}><Link to="/about" style={navLinkStyles}>About</Link></li>
+                    <li style={navLinkItemStyles}><Link to="/gallery" style={navLinkStyles}>Gallery</Link></li>
                 </ul>
             </div>
             <div className="navbar-right" style={navbarRightStyles}>

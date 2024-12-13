@@ -8,7 +8,7 @@ const Footer = () => {
         textAlign: 'center',
         fontSize: '1rem',
         position: 'relative',
-        bottom: 0,
+        bottom: '0',
         width: '100%',
         marginTop: '20px',
     };
