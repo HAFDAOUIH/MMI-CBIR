@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { fetchImagesByCategory } from '../services/imageService';
+import { fetchImagesByCategory, fetchImageDescriptors } from '../services/imageService';
 import Navbar from '../components/Navbar';
 import UploadModal from '../components/UploadModal';
 import CategoryMenu from '../components/CategoryMenu';
 import ImageCard from '../components/ImageCard';
-import DescriptorModal from '../components/DescriptorModal'; // Import the DescriptorModal
+import DescriptorModal from '../components/DescriptorModal';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Modal from 'react-modal';
 import Cropper from 'react-cropper';
 import 'cropperjs/dist/cropper.css';
+import { Spinner } from 'react-bootstrap'; // Add the Spinner component for loading
 
 Modal.setAppElement('#root');
 
@@ -25,8 +26,11 @@ function DashboardPage() {
     const [imageToEdit, setImageToEdit] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [cropper, setCropper] = useState(null);
-    const [descriptorImage, setDescriptorImage] = useState(null); // State for descriptors modal
-    const [isViewingDescriptors, setIsViewingDescriptors] = useState(false); // Whether the descriptors modal is open
+    const [descriptorImage, setDescriptorImage] = useState(null);
+    const [descriptorsCache, setDescriptorsCache] = useState({}); // Cache to store descriptors
+    const [isLoading, setIsLoading] = useState(false); // Loading state for descriptors
+    const [isViewingDescriptors, setIsViewingDescriptors] = useState(false);
+    const [abortController, setAbortController] = useState(null); // AbortController to manage cancellations
 
     const loadImages = (category) => {
         fetchImagesByCategory(category).then((data) => {
@@ -73,9 +77,41 @@ function DashboardPage() {
         toast.error('Image deleted successfully!');
     };
 
-    const handleImageClick = (image) => {
-        setDescriptorImage(image); // Set the image for the descriptors modal
-        setIsViewingDescriptors(true); // Open the modal
+    const handleImageClick = async (image) => {
+        // Check if descriptors are already cached
+        if (descriptorsCache[image._id]) {
+            setDescriptorImage(image); // Set the selected image for the modal
+            setIsViewingDescriptors(true); // Open the modal
+            return;
+        }
+
+        // If there is an ongoing request, cancel it
+        if (abortController) {
+            abortController.abort();
+        }
+
+        // Create a new AbortController instance
+        const controller = new AbortController();
+        setAbortController(controller);
+
+        setIsLoading(true); // Show loading spinner
+
+        try {
+            const data = await fetchImageDescriptors(image._id, { signal: controller.signal });
+            // Cache the descriptors once fetched
+            setDescriptorsCache((prevCache) => ({
+                ...prevCache,
+                [image._id]: data, // Cache the descriptors
+            }));
+            setDescriptorImage(image); // Set the selected image for the modal
+            setIsViewingDescriptors(true); // Open the modal
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Error fetching descriptors:', error.message);
+            }
+        } finally {
+            setIsLoading(false); // Hide loading spinner
+        }
     };
 
     const handleCloseDescriptors = () => {
@@ -177,7 +213,16 @@ function DashboardPage() {
                     show={isViewingDescriptors}
                     onHide={handleCloseDescriptors}
                     imageId={descriptorImage._id}
+                    descriptors={descriptorsCache[descriptorImage._id]} // Pass cached descriptors to modal
                 />
+            )}
+
+            {/* Loading Spinner */}
+            {isLoading && (
+                <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+                    <Spinner animation="border" role="status" />
+                    <span>Loading descriptors...</span>
+                </div>
             )}
 
             <ToastContainer />

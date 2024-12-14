@@ -4,13 +4,16 @@ import axios from '../services/api';
 function UploadModal({ isOpen, onClose, onUploadSuccess }) {
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [category, setCategory] = useState('Forest');
+    const [isUploading, setIsUploading] = useState(false); // Add loading state
 
     const categories = ['Grass', 'Field', 'Industry', 'RiverLake', 'Forest', 'Resident', 'Parking'];
 
+    // Early return if modal is not open
     if (!isOpen) return null;
 
     const handleFileChange = (e) => {
-        setSelectedFiles(e.target.files);
+        // Convert FileList to array
+        setSelectedFiles(Array.from(e.target.files));
     };
 
     const handleCategoryChange = (e) => {
@@ -23,10 +26,12 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
             return;
         }
 
+        setIsUploading(true); // Set uploading state
+
         const formData = new FormData();
-        for (let i = 0; i < selectedFiles.length; i++) {
-            formData.append('images', selectedFiles[i]);
-        }
+        selectedFiles.forEach((file) => {
+            formData.append('images', file);
+        });
         formData.append('category', category);
 
         try {
@@ -36,10 +41,12 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
                 },
             });
             onUploadSuccess();
+            setIsUploading(false); // Reset uploading state
             onClose();
         } catch (err) {
             console.error('Upload failed:', err.response?.data || err.message);
             alert('Failed to upload images');
+            setIsUploading(false); // Reset uploading state
         }
     };
 
@@ -79,7 +86,13 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
                         </option>
                     ))}
                 </select>
-                <button onClick={handleUpload} style={{ marginRight: '10px', backgroundColor: '#ff6347', padding: '8px 16px', color: 'white' }}>Upload</button>
+                <button
+                    onClick={handleUpload}
+                    style={{ marginRight: '10px', backgroundColor: '#ff6347', padding: '8px 16px', color: 'white' }}
+                    disabled={isUploading} // Disable button when uploading
+                >
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                </button>
                 <button onClick={onClose} style={{ padding: '8px 16px' }}>Cancel</button>
             </div>
         </div>

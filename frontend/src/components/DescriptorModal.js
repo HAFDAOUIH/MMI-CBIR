@@ -63,14 +63,23 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
         ],
     }}
     options={{
-        responsive: true,
-        maintainAspectRatio: false,
+        responsive: true, // Keep it responsive
+        maintainAspectRatio: true, // Maintain aspect ratio
         scales: {
-            x: { title: { display: true, text: 'Bins' } },
-            y: { title: { display: true, text: 'Frequency' } },
+            x: {
+                title: { display: true, text: 'Bins' },
+                ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 10,
+                },
+            },
+            y: {
+                title: { display: true, text: 'Frequency' },
+                min: 0, // Ensure the Y-axis starts from 0
+            },
         },
     }}
-/>
+                />
                 <h5>Dominant Colors</h5>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
                     {descriptors.dominantColors.map((color, index) => (
