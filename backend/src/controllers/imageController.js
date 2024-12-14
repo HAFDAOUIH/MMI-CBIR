@@ -2,13 +2,12 @@ const Image = require('../models/Image');
 const axios = require('axios');
 
 // Function to calculate descriptors via the Flask API
-const calculateDescriptors = async (imagePath) => {
+const calculateDescriptorsAsync = async (imagePath) => {
     try {
         console.log('Sending request to Flask API for descriptors:', imagePath);
         const response = await axios.post('http://localhost:5001/api/calculate_descriptors', {
             image_path: imagePath,
         });
-        console.log('Response from Flask API:', response.data);
         return response.data; // Return the descriptors
     } catch (error) {
         console.error('Error communicating with Flask API:', error.message);
@@ -21,7 +20,7 @@ const calculateDescriptors = async (imagePath) => {
     }
 };
 
-// Unified function to handle single or multiple image uploads
+// Unified function to handle image uploads
 exports.uploadImages = async (req, res) => {
     try {
         const { category } = req.body; // Category from request body
@@ -34,11 +33,11 @@ exports.uploadImages = async (req, res) => {
         console.log('Received files:', files);
         console.log('Category:', category);
 
-        // Process each file, calculate descriptors, and save to MongoDB
+        // Process each file, calculate descriptors asynchronously
         const imageDocs = await Promise.all(
             files.map(async (file) => {
-                // Calculate descriptors
-                const descriptors = await calculateDescriptors(file.path);
+                // Asynchronously calculate descriptors
+                const descriptors = await calculateDescriptorsAsync(file.path);
 
                 // Save image document in MongoDB
                 const newImage = new Image({
@@ -46,15 +45,16 @@ exports.uploadImages = async (req, res) => {
                     filepath: file.path,
                     category: category,
                     histogram: descriptors.histogram,
-                    dominantColors: descriptors.dominant_colors,
+                    dominantColors: descriptors.dominantColors,
                     textureDescriptors: descriptors.textureDescriptors,
                     huMoments: descriptors.huMoments,
                 });
+
                 return newImage.save();
             })
         );
 
-        res.status(201).json({ message: 'Images uploaded successfully!', images: imageDocs });
+        res.status(201).json({ message: 'Images uploaded and descriptors calculated successfully!', images: imageDocs });
     } catch (error) {
         console.error('Error uploading images:', error.message);
         res.status(500).json({ error: 'Server error during image upload.' });
@@ -70,5 +70,25 @@ exports.getImagesByCategory = async (req, res) => {
     } catch (error) {
         console.error('Error fetching images by category:', error.message);
         res.status(500).json({ error: 'Server error while fetching images' });
+    }
+};
+
+// Fetch descriptors for an image by its ID
+exports.getImageDescriptors = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const image = await Image.findById(id);
+        if (!image) {
+            return res.status(404).json({ message: 'Image not found' });
+        }
+        res.json({
+            histogram: image.histogram,
+            dominantColors: image.dominantColors,
+            textureDescriptors: image.textureDescriptors,
+            huMoments: image.huMoments,
+        });
+    } catch (error) {
+        console.error('Error fetching image descriptors:', error.message);
+        res.status(500).json({ error: 'Server error while fetching image descriptors' });
     }
 };

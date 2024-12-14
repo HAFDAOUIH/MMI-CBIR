@@ -36,14 +36,10 @@ def calculate_descriptors():
 
     histogram = calculate_color_histogram(image)
     dominant_colors = calculate_dominant_colors(image)
-    texture = calculate_gabor_texture(image)
-    hu_moments = calculate_hu_moments(image)
 
     return jsonify({
         'histogram': histogram,
         'dominant_colors': dominant_colors,
-        'texture': texture,
-        'hu_moments': hu_moments
     })
 
 if __name__ == '__main__':
