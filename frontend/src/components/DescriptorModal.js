@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement } from 'chart.js';
-import {fetchImageDescriptors, getImageDescriptors} from '../services/imageService';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Legend } from 'chart.js';
+import { getImageDescriptors } from '../services/imageService';
 
 // Register required Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Legend);
 
 const DescriptorModal = ({ show, onHide, imageId }) => {
     const [descriptors, setDescriptors] = useState(null);
@@ -32,18 +32,6 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
             setDescriptors(null); // Reset descriptors when modal is closed
         }
     }, [show, imageId]);
-
-    // Helper function to create chart data
-    const createHistogramData = (histogram, color) => ({
-        labels: Array.from({ length: 256 }, (_, i) => i),
-        datasets: [
-            {
-                label: `${color} Histogram`,
-                data: histogram && histogram.length > 0 ? histogram : Array(256).fill(0), // Fallback to zeros
-                backgroundColor: color,
-            },
-        ],
-    });
 
     if (isLoading) {
         return (
@@ -83,31 +71,59 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
 
     const { histogram, dominantColors } = descriptors;
 
+    // Prepare data for combined histogram plot
+    const combinedHistogramData = {
+        labels: Array.from({ length: 256 }, (_, i) => i),
+        datasets: [
+            {
+                label: 'Blue Channel',
+                data: histogram.blue,
+                backgroundColor: 'rgba(0, 0, 255, 0.5)',
+                borderColor: 'blue',
+                borderWidth: 1,
+            },
+            {
+                label: 'Green Channel',
+                data: histogram.green,
+                backgroundColor: 'rgba(0, 255, 0, 0.5)',
+                borderColor: 'green',
+                borderWidth: 1,
+            },
+            {
+                label: 'Red Channel',
+                data: histogram.red,
+                backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                borderColor: 'red',
+                borderWidth: 1,
+            },
+        ],
+    };
+
+    const combinedHistogramOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+            x: { title: { display: true, text: 'Bins' } },
+            y: { title: { display: true, text: 'Frequency' }, beginAtZero: true },
+        },
+        plugins: {
+            legend: { display: true, position: 'top' },
+        },
+    };
+
     return (
-        <Modal show={show} onHide={onHide}>
+        <Modal show={show} onHide={onHide} size="lg">
             <Modal.Header closeButton>
                 <Modal.Title>Image Descriptors</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <h5>Color Histograms</h5>
-                {['blue', 'green', 'red'].map((color) => (
-                    <div key={color} style={{ marginBottom: '20px' }}>
-                        <Bar
-                            data={createHistogramData(histogram[color], color)}
-                            options={{
-                                responsive: true,
-                                maintainAspectRatio: true,
-                                scales: {
-                                    x: { title: { display: true, text: 'Bins' } },
-                                    y: { title: { display: true, text: 'Frequency' }, beginAtZero: true },
-                                },
-                            }}
-                        />
-                    </div>
-                ))}
+                <h5>Color Histograms (Combined)</h5>
+                <div style={{ height: '400px' }}>
+                    <Bar data={combinedHistogramData} options={combinedHistogramOptions} />
+                </div>
                 <h5>Dominant Colors</h5>
                 {dominantColors && dominantColors.length > 0 ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
                         {dominantColors.map((color, index) => (
                             <div
                                 key={index}
