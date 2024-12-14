@@ -1,15 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, RadialLinearScale, Legend, Tooltip } from 'chart.js';
-import { getImageDescriptors } from '../services/imageService';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    RadialLinearScale,
+    PointElement,
+    LineElement, // Import LineElement
+    Legend,
+    Tooltip,
+} from 'chart.js';
 import { Bar, Radar } from 'react-chartjs-2';
+import { getImageDescriptors } from '../services/imageService';
 
 // Register required Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, RadialLinearScale, Legend, Tooltip);
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    RadialLinearScale,
+    PointElement,
+    LineElement, // Register LineElement
+    Legend,
+    Tooltip
+);
 
 const DescriptorModal = ({ show, onHide, imageId }) => {
     const [descriptors, setDescriptors] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Refs to manage chart instances
+    const histogramChartRef = useRef(null);
+    const radarChartRef = useRef(null);
+    const barChartRef = useRef(null);
 
     useEffect(() => {
         if (show && imageId) {
@@ -32,6 +56,15 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
             setDescriptors(null); // Reset descriptors when modal is closed
         }
     }, [show, imageId]);
+
+    // Cleanup charts on unmount
+    useEffect(() => {
+        return () => {
+            if (histogramChartRef.current) histogramChartRef.current.destroy();
+            if (radarChartRef.current) radarChartRef.current.destroy();
+            if (barChartRef.current) barChartRef.current.destroy();
+        };
+    }, []);
 
     if (isLoading) {
         return (
@@ -68,6 +101,7 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
             </Modal>
         );
     }
+
     const { histogram, dominantColors, textureDescriptors, huMoments } = descriptors;
 
     // Prepare data for combined histogram plot
@@ -143,12 +177,12 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
             </Modal.Header>
             <Modal.Body>
                 <h5>Color Histograms</h5>
-                <div style={{height: '400px'}}>
-                    <Bar data={combinedHistogramData} options={combinedHistogramOptions}/>
+                <div style={{ height: '400px' }}>
+                    <Bar data={combinedHistogramData} options={combinedHistogramOptions} ref={histogramChartRef} />
                 </div>
                 <h5>Dominant Colors</h5>
                 {dominantColors && dominantColors.length > 0 ? (
-                    <div style={{display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px'}}>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
                         {dominantColors.map((color, index) => (
                             <div
                                 key={index}
@@ -161,33 +195,34 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
                             ></div>
                         ))}
                     </div>
-
                 ) : (
                     <p>Dominant colors are not available for this image.</p>
                 )}
                 <h5>Texture Descriptors (Radar Chart)</h5>
-                <div style={{height: '400px', marginBottom: '20px'}}>
+                <div style={{ height: '400px', marginBottom: '20px' }}>
                     <Radar
                         data={createTextureRadarData(textureDescriptors)}
                         options={{
-                            scales: {r: {beginAtZero: true}},
-                            plugins: {legend: {display: true, position: 'top'}},
+                            scales: { r: { beginAtZero: true } },
+                            plugins: { legend: { display: true, position: 'top' } },
                         }}
+                        ref={radarChartRef}
                     />
                 </div>
                 <h5>Hu Moments (Bar Chart)</h5>
-                <div style={{height: '400px', marginBottom: '20px'}}>
+                <div style={{ height: '400px', marginBottom: '20px' }}>
                     <Bar
                         data={createHuMomentsBarData(huMoments)}
                         options={{
                             responsive: true,
                             maintainAspectRatio: true,
                             scales: {
-                                x: {title: {display: true, text: 'Moments'}},
-                                y: {title: {display: true, text: 'Value'}, beginAtZero: true},
+                                x: { title: { display: true, text: 'Moments' } },
+                                y: { title: { display: true, text: 'Value' }, beginAtZero: true },
                             },
-                            plugins: {legend: {display: false}},
+                            plugins: { legend: { display: false } },
                         }}
+                        ref={barChartRef}
                     />
                 </div>
             </Modal.Body>
