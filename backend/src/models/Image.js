@@ -4,10 +4,14 @@ const imageSchema = new mongoose.Schema({
     filename: { type: String, required: true },
     filepath: { type: String, required: true },
     category: { type: String, required: true },
-    histogram: [Number], // Color histogram (array of numbers)
-    dominantColors: [[Number]], // Array of RGB values for dominant colors
-    textureDescriptors: [Number], // Array of Gabor texture descriptors
-    huMoments: [Number], // Array of Hu moments
+    histogram: {
+        blue: [Number],
+        green: [Number],
+        red: [Number],
+    }, // Separate histograms for RGB
+    dominantColors: [[Number]],
+    textureDescriptors: [Number],
+    huMoments: [Number],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Image', imageSchema);

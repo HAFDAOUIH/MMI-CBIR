@@ -4,15 +4,16 @@ const axios = require('axios');
 // Function to calculate descriptors via the Flask API
 const calculateDescriptorsAsync = async (imagePath) => {
     try {
-        console.log('Sending request to Flask API for descriptors:', imagePath);
+        console.log(`Sending imagePath to Flask: ${imagePath}`);
         const response = await axios.post('http://localhost:5001/api/calculate_descriptors', {
             image_path: imagePath,
         });
-        return response.data; // Return the descriptors
+        console.log('Descriptors received:', response.data);
+        return response.data;
     } catch (error) {
         console.error('Error communicating with Flask API:', error.message);
         return {
-            histogram: [],
+            histograms: { blue_channel: [], green_channel: [], red_channel: [] },
             dominantColors: [],
             textureDescriptors: [],
             huMoments: [],
@@ -20,31 +21,26 @@ const calculateDescriptorsAsync = async (imagePath) => {
     }
 };
 
+
 // Unified function to handle image uploads
 exports.uploadImages = async (req, res) => {
     try {
-        const { category } = req.body; // Category from request body
-        const files = req.files; // Uploaded files array
+        const { category } = req.body;
+        const files = req.files;
 
         if (!files || !category) {
             return res.status(400).json({ error: 'Please select files and provide a category.' });
         }
 
-        console.log('Received files:', files);
-        console.log('Category:', category);
-
-        // Process each file, calculate descriptors asynchronously
         const imageDocs = await Promise.all(
             files.map(async (file) => {
-                // Asynchronously calculate descriptors
                 const descriptors = await calculateDescriptorsAsync(file.path);
 
-                // Save image document in MongoDB
                 const newImage = new Image({
                     filename: file.originalname,
                     filepath: file.path,
                     category: category,
-                    histogram: descriptors.histogram,
+                    histogram: descriptors.histograms,
                     dominantColors: descriptors.dominantColors,
                     textureDescriptors: descriptors.textureDescriptors,
                     huMoments: descriptors.huMoments,

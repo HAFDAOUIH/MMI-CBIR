@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchImagesByCategory, fetchImageDescriptors } from '../services/imageService';
+import {fetchImagesByCategory, fetchImageDescriptors, getImageDescriptors} from '../services/imageService';
 import Navbar from '../components/Navbar';
 import UploadModal from '../components/UploadModal';
 import CategoryMenu from '../components/CategoryMenu';
@@ -20,6 +20,7 @@ function DashboardPage() {
     const [categories, setCategories] = useState([
         'Grass', 'Field', 'Industry', 'RiverLake', 'Forest', 'Resident', 'Parking',
     ]);
+    const [descriptorModalOpen, setDescriptorModalOpen] = useState(false); // Define modal open state
     const [selectedCategory, setSelectedCategory] = useState('Forest');
     const [currentPage, setCurrentPage] = useState(1);
     const [imagesPerPage] = useState(21);
@@ -31,6 +32,8 @@ function DashboardPage() {
     const [isLoading, setIsLoading] = useState(false); // Loading state for descriptors
     const [isViewingDescriptors, setIsViewingDescriptors] = useState(false);
     const [abortController, setAbortController] = useState(null); // AbortController to manage cancellations
+    const [descriptors, setDescriptors] = useState({});
+    const [isDescriptorModalOpen, setIsDescriptorModalOpen] = useState(false);
 
     const loadImages = (category) => {
         fetchImagesByCategory(category).then((data) => {
@@ -78,45 +81,39 @@ function DashboardPage() {
     };
 
     const handleImageClick = async (image) => {
-        // Check if descriptors are already cached
         if (descriptorsCache[image._id]) {
-            setDescriptorImage(image); // Set the selected image for the modal
-            setIsViewingDescriptors(true); // Open the modal
+            setDescriptorImage(image);
+            setIsViewingDescriptors(true);
             return;
         }
 
-        // If there is an ongoing request, cancel it
-        if (abortController) {
-            abortController.abort();
-        }
-
-        // Create a new AbortController instance
-        const controller = new AbortController();
-        setAbortController(controller);
-
-        setIsLoading(true); // Show loading spinner
+        setIsLoading(true);
 
         try {
-            const data = await fetchImageDescriptors(image._id, { signal: controller.signal });
-            // Cache the descriptors once fetched
-            setDescriptorsCache((prevCache) => ({
-                ...prevCache,
-                [image._id]: data, // Cache the descriptors
-            }));
-            setDescriptorImage(image); // Set the selected image for the modal
-            setIsViewingDescriptors(true); // Open the modal
-        } catch (error) {
-            if (error.name !== 'AbortError') {
-                console.error('Error fetching descriptors:', error.message);
+            const data = await getImageDescriptors(image._id);
+            if (data && data.dominantColors) { // Validate data
+                setDescriptorsCache((prevCache) => ({
+                    ...prevCache,
+                    [image._id]: data,
+                }));
+                setDescriptorImage(image);
+                setIsViewingDescriptors(true);
+            } else {
+                console.error("Descriptors not found for image:", image._id);
+                toast.error("No descriptors found for the selected image.");
             }
+        } catch (error) {
+            console.error("Error fetching descriptors:", error.message);
         } finally {
-            setIsLoading(false); // Hide loading spinner
+            setIsLoading(false);
         }
     };
 
-    const handleCloseDescriptors = () => {
-        setDescriptorImage(null);
-        setIsViewingDescriptors(false); // Close the modal
+
+
+    const handleCloseDescriptorModal = () => {
+        setIsDescriptorModalOpen(false);
+        setDescriptors({});
     };
 
     // Pagination Logic
@@ -208,12 +205,11 @@ function DashboardPage() {
             </div>
 
             {/* Descriptor Modal */}
-            {isViewingDescriptors && descriptorImage && (
+            {isDescriptorModalOpen && (
                 <DescriptorModal
-                    show={isViewingDescriptors}
-                    onHide={handleCloseDescriptors}
-                    imageId={descriptorImage._id}
-                    descriptors={descriptorsCache[descriptorImage._id]} // Pass cached descriptors to modal
+                    show={isDescriptorModalOpen}
+                    onHide={handleCloseDescriptorModal}
+                    descriptors={descriptors}
                 />
             )}
             {/* Image Edit Modal */}

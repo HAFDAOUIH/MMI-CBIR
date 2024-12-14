@@ -51,29 +51,26 @@ router.delete('/delete/:id', async (req, res) => {
 });
 router.get('/descriptors/:id', async (req, res) => {
     try {
-        console.log('Fetching descriptors for ID:', req.params.id); // Debugging
+        console.log('Fetching descriptors for ID:', req.params.id);
         const image = await Image.findById(req.params.id);
         if (!image) {
-            console.log('Image not found:', req.params.id); // Debugging
+            console.log('Image not found:', req.params.id);
             return res.status(404).json({ message: 'Image not found' });
         }
 
-        console.log('Descriptors found:', {
+        const response = {
             histogram: image.histogram,
             dominantColors: image.dominantColors,
             textureDescriptors: image.textureDescriptors,
             huMoments: image.huMoments,
-        });
+        };
 
-        res.json({
-            histogram: image.histogram,
-            dominantColors: image.dominantColors,
-            textureDescriptors: image.textureDescriptors,
-            huMoments: image.huMoments,
-        });
+        console.log('Descriptors found:', response);
+        res.json(response);
     } catch (error) {
-        console.error('Error fetching descriptors:', error);
+        console.error('Error fetching descriptors:', error.message);
         res.status(500).json({ message: 'Error fetching descriptors' });
     }
 });
+
 module.exports = router;
