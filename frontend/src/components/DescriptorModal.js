@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, RadialLinearScale, Legend, Tooltip } from 'chart.js';
 import { getImageDescriptors } from '../services/imageService';
+import { Bar, Radar } from 'react-chartjs-2';
 
 // Register required Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, RadialLinearScale, Legend, Tooltip);
 
 const DescriptorModal = ({ show, onHide, imageId }) => {
     const [descriptors, setDescriptors] = useState(null);
@@ -68,8 +68,7 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
             </Modal>
         );
     }
-
-    const { histogram, dominantColors } = descriptors;
+    const { histogram, dominantColors, textureDescriptors, huMoments } = descriptors;
 
     // Prepare data for combined histogram plot
     const combinedHistogramData = {
@@ -111,19 +110,45 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
         },
     };
 
+    const createTextureRadarData = (textureDescriptors) => ({
+        labels: Array.from({ length: Math.min(textureDescriptors.length, 50) }, (_, i) => `Descriptor ${i + 1}`),
+        datasets: [
+            {
+                label: 'Texture Descriptors',
+                data: textureDescriptors.slice(0, 50), // Limit to first 50
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+            },
+        ],
+    });
+
+    const createHuMomentsBarData = (huMoments) => ({
+        labels: huMoments.map((_, i) => `Moment ${i + 1}`),
+        datasets: [
+            {
+                label: 'Hu Moments',
+                data: huMoments.map((moment) => parseFloat(moment.toFixed(6))), // Rounded to 6 decimals
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+            },
+        ],
+    });
+
     return (
         <Modal show={show} onHide={onHide} size="lg">
             <Modal.Header closeButton>
                 <Modal.Title>Image Descriptors</Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                <h5>Color Histograms (Combined)</h5>
-                <div style={{ height: '400px' }}>
-                    <Bar data={combinedHistogramData} options={combinedHistogramOptions} />
+                <h5>Color Histograms</h5>
+                <div style={{height: '400px'}}>
+                    <Bar data={combinedHistogramData} options={combinedHistogramOptions}/>
                 </div>
                 <h5>Dominant Colors</h5>
                 {dominantColors && dominantColors.length > 0 ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
+                    <div style={{display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px'}}>
                         {dominantColors.map((color, index) => (
                             <div
                                 key={index}
@@ -136,9 +161,35 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
                             ></div>
                         ))}
                     </div>
+
                 ) : (
                     <p>Dominant colors are not available for this image.</p>
                 )}
+                <h5>Texture Descriptors (Radar Chart)</h5>
+                <div style={{height: '400px', marginBottom: '20px'}}>
+                    <Radar
+                        data={createTextureRadarData(textureDescriptors)}
+                        options={{
+                            scales: {r: {beginAtZero: true}},
+                            plugins: {legend: {display: true, position: 'top'}},
+                        }}
+                    />
+                </div>
+                <h5>Hu Moments (Bar Chart)</h5>
+                <div style={{height: '400px', marginBottom: '20px'}}>
+                    <Bar
+                        data={createHuMomentsBarData(huMoments)}
+                        options={{
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            scales: {
+                                x: {title: {display: true, text: 'Moments'}},
+                                y: {title: {display: true, text: 'Value'}, beginAtZero: true},
+                            },
+                            plugins: {legend: {display: false}},
+                        }}
+                    />
+                </div>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="secondary" onClick={onHide}>
