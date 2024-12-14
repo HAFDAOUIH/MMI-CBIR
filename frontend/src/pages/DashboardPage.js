@@ -216,7 +216,66 @@ function DashboardPage() {
                     descriptors={descriptorsCache[descriptorImage._id]} // Pass cached descriptors to modal
                 />
             )}
-
+            {/* Image Edit Modal */}
+            {isEditing && (
+                <Modal isOpen={isEditing} onRequestClose={() => setIsEditing(false)} style={{
+                    overlay: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                    },
+                    content: {
+                        position: 'absolute',
+                        top: '10%',
+                        left: '10%',
+                        right: '10%',
+                        bottom: '10%',
+                        padding: '20px',
+                        background: '#fff',
+                        borderRadius: '10px',
+                        border: 'none',
+                        maxWidth: '80%',
+                    },
+                }}>
+                    <h3>Edit Image</h3>
+                    {/* Cropper for image editing */}
+                    <Cropper
+                        src={imageToEdit ? `http://localhost:5000/uploads/${imageToEdit.filepath.split('/').pop()}` : ''}
+                        style={{ height: 400, width: '100%' }}
+                        initialAspectRatio={1}
+                        guides={false}
+                        cropBoxResizable={true}
+                        onInitialized={(instance) => setCropper(instance)}
+                    />
+                    <div style={{ marginTop: '20px' }}>
+                        <button
+                            onClick={handleSaveEdits}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#4CAF50',
+                                color: '#fff',
+                                borderRadius: '4px',
+                                border: 'none',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            Save Edits
+                        </button>
+                        <button
+                            onClick={() => setIsEditing(false)}
+                            style={{
+                                padding: '10px 20px',
+                                backgroundColor: '#f44336',
+                                color: '#fff',
+                                borderRadius: '4px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                marginLeft: '10px',
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </Modal>
+            )}
             {/* Loading Spinner */}
             {isLoading && (
                 <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
