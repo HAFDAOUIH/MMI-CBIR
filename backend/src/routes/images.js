@@ -53,16 +53,22 @@ router.get('/descriptors/:id', async (req, res) => {
     try {
         console.log('Fetching descriptors for ID:', req.params.id);
         const image = await Image.findById(req.params.id);
+
         if (!image) {
             console.log('Image not found:', req.params.id);
             return res.status(404).json({ message: 'Image not found' });
         }
 
+        // Include all descriptor fields in the response
         const response = {
             histogram: image.histogram,
             dominantColors: image.dominantColors,
             textureDescriptors: image.textureDescriptors,
             huMoments: image.huMoments,
+            textureImage: image.textureImage, // Add texture image path
+            huImage: image.huImage,           // Add Hu moment image path
+            edgeHistogram: image.edgeHistogram, // Add edge histogram
+            glcmFeatures: image.glcmFeatures, // Add GLCM features
         };
 
         console.log('Descriptors found:', response);

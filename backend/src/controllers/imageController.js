@@ -17,6 +17,8 @@ const calculateDescriptorsAsync = async (imagePath) => {
             dominantColors: [],
             textureDescriptors: [],
             huMoments: [],
+            glcmFeatures: {}, // Add default empty object
+            edgeHistogram: [],
         };
     }
 };
@@ -44,6 +46,10 @@ exports.uploadImages = async (req, res) => {
                     dominantColors: descriptors.dominantColors,
                     textureDescriptors: descriptors.textureDescriptors,
                     huMoments: descriptors.huMoments,
+                    textureImage: descriptors.textureImage, // Ensure this is saved
+                    huImage: descriptors.huImage,
+                    glcmFeatures: descriptors.glcmFeatures, // Add this
+                    edgeHistogram: descriptors.edgeHistogram, // Add this
                 });
 
                 return newImage.save();
@@ -82,9 +88,13 @@ exports.getImageDescriptors = async (req, res) => {
             dominantColors: image.dominantColors,
             textureDescriptors: image.textureDescriptors,
             huMoments: image.huMoments,
+            textureImage: image.textureImage, // Include texture image path
+            huImage: image.huImage,           // Include Hu moment image path
+            edgeHistogram: image.edgeHistogram, // Include edge histogram
+            glcmFeatures: image.glcmFeatures, // Include GLCM features
         });
     } catch (error) {
         console.error('Error fetching image descriptors:', error.message);
-        res.status(500).json({ error: 'Server error while fetching image descriptors' });
+        res.status(500).json({ message: 'Error fetching image descriptors' });
     }
 };

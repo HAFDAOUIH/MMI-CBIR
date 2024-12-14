@@ -4,7 +4,8 @@ import logging
 from flask import Flask, request, jsonify
 from sklearn.cluster import KMeans
 import os
-from skimage.feature import greycomatrix, greycoprops
+from skimage.feature import graycomatrix, graycoprops
+from flask import send_from_directory
 
 app = Flask(__name__)
 
@@ -132,33 +133,51 @@ def calculate_gabor_texture_with_regions(image):
         logger.error(f"Error calculating Gabor texture with regions: {e}")
         return [], image
 
-def calculate_edge_density(image):
+def calculate_edge_histogram(image):
     try:
-        logger.debug("Calculating Edge Density...")
+        logger.debug("Calculating Edge Histogram Descriptor...")
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray_image, 100, 200)
-        edge_density = np.sum(edges > 0) / edges.size
-        return edge_density
-    except Exception as e:
-        logger.error(f"Error calculating Edge Density: {e}")
-        return 0.0
 
-def calculate_haralick_features(image):
-    try:
-        logger.debug("Calculating Haralick Features...")
-        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        glcm = greycomatrix(gray_image, distances=[1], angles=[0], symmetric=True, normed=True)
-        features = {
-            'contrast': greycoprops(glcm, 'contrast')[0, 0],
-            'dissimilarity': greycoprops(glcm, 'dissimilarity')[0, 0],
-            'homogeneity': greycoprops(glcm, 'homogeneity')[0, 0],
-            'energy': greycoprops(glcm, 'energy')[0, 0],
-            'correlation': greycoprops(glcm, 'correlation')[0, 0]
-        }
-        return features
+        # Use Sobel edge detection
+        edges_x = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0, ksize=3)
+        edges_y = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1, ksize=3)
+
+        # Compute magnitude of gradients
+        magnitude = cv2.magnitude(edges_x, edges_y)
+
+        # Quantize the edge magnitude into a histogram
+        hist, _ = np.histogram(magnitude, bins=10, range=(0, 255))
+        return hist.tolist()
     except Exception as e:
-        logger.error(f"Error calculating Haralick Features: {e}")
+        logger.error(f"Error calculating Edge Histogram Descriptor: {e}")
+        return []
+
+def calculate_glcm_features(image):
+    try:
+        logger.debug("Calculating GLCM features...")
+        gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        # Compute GLCM matrix
+        glcm = graycomatrix(gray_image, distances=[1], angles=[0, np.pi/4, np.pi/2, 3*np.pi/4], levels=256, symmetric=True, normed=True)
+
+        # Extract properties
+        contrast = graycoprops(glcm, 'contrast').flatten().tolist()
+        dissimilarity = graycoprops(glcm, 'dissimilarity').flatten().tolist()
+        homogeneity = graycoprops(glcm, 'homogeneity').flatten().tolist()
+        energy = graycoprops(glcm, 'energy').flatten().tolist()
+        correlation = graycoprops(glcm, 'correlation').flatten().tolist()
+
+        return {
+            "contrast": contrast,
+            "dissimilarity": dissimilarity,
+            "homogeneity": homogeneity,
+            "energy": energy,
+            "correlation": correlation
+        }
+    except Exception as e:
+        logger.error(f"Error calculating GLCM features: {e}")
         return {}
+
 
 @app.route('/api/calculate_descriptors', methods=['POST'])
 def calculate_descriptors():
@@ -175,10 +194,16 @@ def calculate_descriptors():
         dominant_colors = calculate_dominant_colors(image)
         texture_descriptors, texture_image = calculate_gabor_texture_with_regions(image)
         hu_moments, hu_image = calculate_hu_moments_with_contours(image)
+        glcm_features = calculate_glcm_features(image)
+        edge_histogram = calculate_edge_histogram(image)
 
-        # Save images for texture and Hu moments highlights
-        texture_image_path = os.path.join("static", "texture_highlighted.png")
-        hu_image_path = os.path.join("static", "hu_highlighted.png")
+        logger.info(f"GLCM Features: {glcm_features}")
+        logger.info(f"Edge Histogram: {edge_histogram}")
+
+        texture_image_filename = "texture_highlighted.png"
+        hu_image_filename = "hu_highlighted.png"
+        texture_image_path = os.path.join("static", texture_image_filename)
+        hu_image_path = os.path.join("static", hu_image_filename)
         cv2.imwrite(texture_image_path, texture_image)
         cv2.imwrite(hu_image_path, hu_image)
 
@@ -188,11 +213,22 @@ def calculate_descriptors():
             'textureDescriptors': texture_descriptors,
             'huMoments': hu_moments,
             'textureImage': texture_image_path,
-            'huImage': hu_image_path
+            'huImage': hu_image_path,
+            'glcmFeatures': glcm_features,
+            'edgeHistogram': edge_histogram
         })
 
     except Exception as e:
         logger.error(f"Error in descriptor calculation: {e}")
         return jsonify({'error': 'Internal server error'}), 500
+
+
+
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory('static', filename)
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
