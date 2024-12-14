@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from "react";
+import { Modal, Button } from "react-bootstrap";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -7,12 +7,14 @@ import {
     BarElement,
     RadialLinearScale,
     PointElement,
-    LineElement, // Import LineElement
+    LineElement,
     Legend,
     Tooltip,
-} from 'chart.js';
-import { Bar, Radar } from 'react-chartjs-2';
-import { getImageDescriptors } from '../services/imageService';
+    Filler,
+} from "chart.js";
+import { Bar, Radar } from "react-chartjs-2";
+import { getImageDescriptors } from "../services/imageService";
+import "./DescriptorModal.css"; // Custom styling
 
 // Register required Chart.js components
 ChartJS.register(
@@ -21,19 +23,15 @@ ChartJS.register(
     BarElement,
     RadialLinearScale,
     PointElement,
-    LineElement, // Register LineElement
+    LineElement,
     Legend,
-    Tooltip
+    Tooltip,
+    Filler
 );
 
-const DescriptorModal = ({ show, onHide, imageId }) => {
+const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) => {
     const [descriptors, setDescriptors] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    // Refs to manage chart instances
-    const histogramChartRef = useRef(null);
-    const radarChartRef = useRef(null);
-    const barChartRef = useRef(null);
 
     useEffect(() => {
         if (show && imageId) {
@@ -41,11 +39,10 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
                 setIsLoading(true);
                 try {
                     const data = await getImageDescriptors(imageId);
-                    console.log("Fetched Descriptors:", data); // Log descriptors
                     setDescriptors(data);
                 } catch (error) {
-                    console.error('Error fetching descriptors:', error.message);
-                    setDescriptors(null); // Reset descriptors on error
+                    console.error("Error fetching descriptors:", error.message);
+                    setDescriptors(null);
                 } finally {
                     setIsLoading(false);
                 }
@@ -53,22 +50,13 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
 
             fetchDescriptors();
         } else {
-            setDescriptors(null); // Reset descriptors when modal is closed
+            setDescriptors(null);
         }
     }, [show, imageId]);
 
-    // Cleanup charts on unmount
-    useEffect(() => {
-        return () => {
-            if (histogramChartRef.current) histogramChartRef.current.destroy();
-            if (radarChartRef.current) radarChartRef.current.destroy();
-            if (barChartRef.current) barChartRef.current.destroy();
-        };
-    }, []);
-
     if (isLoading) {
         return (
-            <Modal show={show} onHide={onHide}>
+            <Modal show={show} onHide={onHide} className="animated-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>Loading Descriptors...</Modal.Title>
                 </Modal.Header>
@@ -86,7 +74,7 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
 
     if (!descriptors) {
         return (
-            <Modal show={show} onHide={onHide}>
+            <Modal show={show} onHide={onHide} className="animated-modal">
                 <Modal.Header closeButton>
                     <Modal.Title>No Descriptors Available</Modal.Title>
                 </Modal.Header>
@@ -102,31 +90,30 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
         );
     }
 
-    const { histogram, dominantColors, textureDescriptors, huMoments } = descriptors;
+    const { histogram, dominantColors, textureDescriptors, huMoments, textureImage, huImage } = descriptors;
 
-    // Prepare data for combined histogram plot
     const combinedHistogramData = {
         labels: Array.from({ length: 256 }, (_, i) => i),
         datasets: [
             {
-                label: 'Blue Channel',
+                label: "Blue Channel",
                 data: histogram.blue,
-                backgroundColor: 'rgba(0, 0, 255, 0.5)',
-                borderColor: 'blue',
+                backgroundColor: "rgba(0, 0, 255, 0.5)",
+                borderColor: "blue",
                 borderWidth: 1,
             },
             {
-                label: 'Green Channel',
+                label: "Green Channel",
                 data: histogram.green,
-                backgroundColor: 'rgba(0, 255, 0, 0.5)',
-                borderColor: 'green',
+                backgroundColor: "rgba(0, 255, 0, 0.5)",
+                borderColor: "green",
                 borderWidth: 1,
             },
             {
-                label: 'Red Channel',
+                label: "Red Channel",
                 data: histogram.red,
-                backgroundColor: 'rgba(255, 0, 0, 0.5)',
-                borderColor: 'red',
+                backgroundColor: "rgba(255, 0, 0, 0.5)",
+                borderColor: "red",
                 borderWidth: 1,
             },
         ],
@@ -136,94 +123,111 @@ const DescriptorModal = ({ show, onHide, imageId }) => {
         responsive: true,
         maintainAspectRatio: true,
         scales: {
-            x: { title: { display: true, text: 'Bins' } },
-            y: { title: { display: true, text: 'Frequency' }, beginAtZero: true },
+            x: { title: { display: true, text: "Bins" } },
+            y: { title: { display: true, text: "Frequency" }, beginAtZero: true },
         },
         plugins: {
-            legend: { display: true, position: 'top' },
+            legend: { display: true, position: "top" },
         },
+    };
+
+    const radarOptions = {
+        scales: {
+            r: {
+                angleLines: { display: true },
+                suggestedMin: 0,
+                suggestedMax: 1,
+                ticks: {
+                    display: true,
+                    backdropColor: "rgba(255, 255, 255, 0)", // Transparent backdrop for ticks
+                },
+            },
+        },
+        plugins: {
+            legend: { display: true, position: "top" },
+        },
+        responsive: true,
+        maintainAspectRatio: true,
     };
 
     const createTextureRadarData = (textureDescriptors) => ({
         labels: Array.from({ length: Math.min(textureDescriptors.length, 50) }, (_, i) => `Descriptor ${i + 1}`),
         datasets: [
             {
-                label: 'Texture Descriptors',
-                data: textureDescriptors.slice(0, 50), // Limit to first 50
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
+                label: "Texture Descriptors",
+                data: textureDescriptors.slice(0, 50),
+                backgroundColor: "rgba(54, 162, 235, 0.2)",
+                borderColor: "rgba(54, 162, 235, 1)",
                 borderWidth: 1,
             },
         ],
     });
 
-    const createHuMomentsBarData = (huMoments) => ({
-        labels: huMoments.map((_, i) => `Moment ${i + 1}`),
-        datasets: [
+    const createHuMomentsRadarData = (huMoments, referenceMoments = null) => {
+        const datasets = [
             {
-                label: 'Hu Moments',
-                data: huMoments.map((moment) => parseFloat(moment.toFixed(6))), // Rounded to 6 decimals
-                backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                borderColor: 'rgba(255, 99, 132, 1)',
+                label: "Hu Moments (Normalized)",
+                data: huMoments,
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                borderColor: "rgba(255, 99, 132, 1)",
                 borderWidth: 1,
             },
-        ],
-    });
+        ];
+
+        if (referenceMoments) {
+            datasets.push({
+                label: "Reference Image Moments",
+                data: referenceMoments,
+                backgroundColor: "rgba(99, 255, 132, 0.2)",
+                borderColor: "rgba(99, 255, 132, 1)",
+                borderWidth: 1,
+            });
+        }
+
+        return {
+            labels: huMoments.map((_, i) => `Moment ${i + 1}`),
+            datasets,
+        };
+    };
 
     return (
-        <Modal show={show} onHide={onHide} size="lg">
+        <Modal show={show} onHide={onHide} size="xl" className="animated-modal">
             <Modal.Header closeButton>
                 <Modal.Title>Image Descriptors</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
-                <h5>Color Histograms</h5>
-                <div style={{ height: '400px' }}>
-                    <Bar data={combinedHistogramData} options={combinedHistogramOptions} ref={histogramChartRef} />
+            <Modal.Body className="descriptor-body">
+                <div className="section">
+                    <h5>Color Histograms</h5>
+                    <Bar data={combinedHistogramData} options={combinedHistogramOptions} />
                 </div>
-                <h5>Dominant Colors</h5>
-                {dominantColors && dominantColors.length > 0 ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
+
+                <div className="section">
+                    <h5>Dominant Colors</h5>
+                    <div className="color-palette">
                         {dominantColors.map((color, index) => (
                             <div
                                 key={index}
-                                style={{
-                                    width: '50px',
-                                    height: '50px',
-                                    backgroundColor: `rgb(${color.join(',')})`,
-                                    border: '1px solid black',
-                                }}
+                                className="color-box"
+                                style={{ backgroundColor: `rgb(${color.join(",")})` }}
                             ></div>
                         ))}
                     </div>
-                ) : (
-                    <p>Dominant colors are not available for this image.</p>
-                )}
-                <h5>Texture Descriptors (Radar Chart)</h5>
-                <div style={{ height: '400px', marginBottom: '20px' }}>
-                    <Radar
-                        data={createTextureRadarData(textureDescriptors)}
-                        options={{
-                            scales: { r: { beginAtZero: true } },
-                            plugins: { legend: { display: true, position: 'top' } },
-                        }}
-                        ref={radarChartRef}
-                    />
                 </div>
-                <h5>Hu Moments (Bar Chart)</h5>
-                <div style={{ height: '400px', marginBottom: '20px' }}>
-                    <Bar
-                        data={createHuMomentsBarData(huMoments)}
-                        options={{
-                            responsive: true,
-                            maintainAspectRatio: true,
-                            scales: {
-                                x: { title: { display: true, text: 'Moments' } },
-                                y: { title: { display: true, text: 'Value' }, beginAtZero: true },
-                            },
-                            plugins: { legend: { display: false } },
-                        }}
-                        ref={barChartRef}
-                    />
+
+                <div className="section">
+                    <h5>Gabor Texture Descriptors</h5>
+                    <div className="chart-container">
+                        <Radar data={createTextureRadarData(textureDescriptors)} options={radarOptions} />
+                        <img src={`http://localhost:5001/${textureImage}`} alt="Texture Highlights" />
+                    </div>
+                </div>
+
+                <div className="section">
+                    <h5>Hu Moments (Shape Features)</h5>
+                    <div className="chart-container">
+                        <Radar data={createHuMomentsRadarData(huMoments)} options={radarOptions} />
+                        <img src={`http://localhost:5001/${huImage}`} alt="Hu Moment Highlights" />
+                    </div>
                 </div>
             </Modal.Body>
             <Modal.Footer>
