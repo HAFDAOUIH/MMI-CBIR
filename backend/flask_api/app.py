@@ -6,6 +6,7 @@ from sklearn.cluster import KMeans
 import os
 from skimage.feature import graycomatrix, graycoprops
 from flask import send_from_directory
+import uuid
 
 app = Flask(__name__)
 
@@ -200,8 +201,11 @@ def calculate_descriptors():
         logger.info(f"GLCM Features: {glcm_features}")
         logger.info(f"Edge Histogram: {edge_histogram}")
 
-        texture_image_filename = "texture_highlighted.png"
-        hu_image_filename = "hu_highlighted.png"
+        unique_id = str(uuid.uuid4())[:8]  # Generate a short unique ID
+        texture_image_filename = f"texture_highlighted_{uuid.uuid4().hex}.png"
+        hu_image_filename = f"hu_highlighted_{uuid.uuid4().hex}.png"
+
+        # Save images in the static folder
         texture_image_path = os.path.join("static", texture_image_filename)
         hu_image_path = os.path.join("static", hu_image_filename)
         cv2.imwrite(texture_image_path, texture_image)
@@ -212,8 +216,8 @@ def calculate_descriptors():
             'dominantColors': dominant_colors,
             'textureDescriptors': texture_descriptors,
             'huMoments': hu_moments,
-            'textureImage': texture_image_path,
-            'huImage': hu_image_path,
+            'textureImage': f"/static/{texture_image_filename}",
+            'huImage': f"/static/{hu_image_filename}",
             'glcmFeatures': glcm_features,
             'edgeHistogram': edge_histogram
         })

@@ -282,41 +282,45 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                     <div className="chart-container">
                         <Radar data={createTextureRadarData(textureDescriptors)} options={radarOptions}/>
                         {textureImage ? (
-                            <img
-                                src={`http://localhost:5001${textureImage}`}
-                                alt="Texture Highlights"
-                                onError={(e) => {
-                                    e.target.style.display = 'none'; // Hide the image if it fails to load
-                                    console.error('Failed to load texture image:', textureImage);
-                                }}
-                            />
-                        ) : (
-                            <p>Texture highlights are not available.</p>
-                        )}
-                    </div>
-                </div>
+                            <div className="image-wrapper">
+                                <img
+                                    src={`http://localhost:5001${textureImage}`}  // textureImage already includes /static
+                                    alt="Texture Highlights"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none'; // Hide the image if it fails to load
+                                        console.error('Failed to load texture image:', textureImage);
+                                    }}
+                                />
+                            </div>
+                                ) : (
+                                <p>Texture highlights are not available.</p>
+                                )}
+                            </div>
+                            </div>
 
-                {/* Hu Moments */}
+                        {/* Hu Moments */}
                 <div className="section">
                     <h5>Hu Moments (Shape Features)</h5>
                     <div className="chart-container">
                         <Radar data={createHuMomentsRadarData(huMoments)} options={radarOptions}/>
                         {huImage ? (
-                            <img
-                                src={`http://localhost:5001${huImage}`}
-                                alt="Hu Moment Highlights"
-                                onError={(e) => {
-                                    e.target.style.display = 'none'; // Hide the image if it fails to load
-                                    console.error('Failed to load Hu moments image:', huImage);
-                                }}
-                            />
-                        ) : (
-                            <p>Hu moments highlights are not available.</p>
-                        )}
-                    </div>
-                </div>
+                            <div className="image-wrapper">
+                                <img
+                                    src={`http://localhost:5001${huImage}`}
+                                    alt="Hu Moment Highlights"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none'; // Hide the image if it fails to load
+                                        console.error('Failed to load Hu moments image:', huImage);
+                                    }}
+                                />
+                            </div>
+                                ) : (
+                                <p>Hu moments highlights are not available.</p>
+                                )}
+                            </div>
+                            </div>
 
-                {/* GLCM Features */}
+                        {/* GLCM Features */}
                 <div className="section">
                     <h5>GLCM Features</h5>
                     {glcmFeatures && Object.keys(glcmFeatures).length > 0 ? (
