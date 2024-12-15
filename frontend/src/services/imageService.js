@@ -35,3 +35,12 @@ export const getImageDescriptors = async (imageId) => {
     }
 };
 
+export const getSimilarImages = async (imageId) => {
+    try {
+        const response = await axios.get(`/api/images/similar/${imageId}`);
+        return response.data; // Return the response containing similar images
+    } catch (error) {
+        console.error('Error fetching similar images:', error.message);
+        throw error;
+    }
+};
