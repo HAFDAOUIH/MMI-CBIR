@@ -202,7 +202,6 @@ exports.getImageDescriptors = async (req, res) => {
     }
 };
 
-// Fetch similar images
 exports.findSimilarImages = async (req, res) => {
     try {
         const { id } = req.params;
