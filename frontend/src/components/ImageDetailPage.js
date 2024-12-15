@@ -106,15 +106,7 @@ const ImageDetailPage = () => {
                     <button onClick={() => setIsDescriptorModalOpen(true)} style={buttonStyle}>
                         View Descriptors
                     </button>
-                    <button onClick={downloadImage} style={buttonStyle}>
-                        Download
-                    </button>
-                    <button onClick={handleEdit} style={buttonStyle}>
-                        Edit
-                    </button>
-                    <button onClick={handleDelete} style={deleteButtonStyle}>
-                        Delete
-                    </button>
+
                 </div>
 
                 {/* Descriptor Modal */}
