@@ -18,14 +18,16 @@ const ImageDetailPage = () => {
 
                 // Fetch image descriptors from the backend
                 const descriptorsData = await getImageDescriptors(id);
-                setDescriptors(descriptorsData);
 
-                // Mock image details for now (Adjust if backend provides image details)
+                console.log("Descriptors Data:", descriptorsData); // Check backend response
+
+                // Update filepath with a proper fallback
                 setImage({
                     filename: `Image ${id}`,
-                    filepath: descriptorsData.textureImage || '', // Replace with actual path
+                    filepath: descriptorsData.filepath || '', // Ensure it is not undefined
                 });
 
+                setDescriptors(descriptorsData);
             } catch (err) {
                 console.error('Error fetching image data:', err.message);
                 setError('Failed to load image details.');
@@ -36,6 +38,7 @@ const ImageDetailPage = () => {
 
         fetchImageData();
     }, [id]);
+
 
     if (isLoading) {
         return (
