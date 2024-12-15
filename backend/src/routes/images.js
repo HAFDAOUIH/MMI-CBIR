@@ -61,6 +61,8 @@ router.get('/descriptors/:id', async (req, res) => {
 
         // Include all descriptor fields in the response
         const response = {
+            filename: image.filename,         // Include filename
+            filepath: image.filepath,
             histogram: image.histogram,
             dominantColors: image.dominantColors,
             textureDescriptors: image.textureDescriptors,

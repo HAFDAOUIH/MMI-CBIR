@@ -84,6 +84,8 @@ exports.getImageDescriptors = async (req, res) => {
             return res.status(404).json({ message: 'Image not found' });
         }
         res.json({
+            filename: image.filename,        // Add this
+            filepath: image.filepath,
             histogram: image.histogram,
             dominantColors: image.dominantColors,
             textureDescriptors: image.textureDescriptors,
