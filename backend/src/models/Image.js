@@ -22,6 +22,7 @@ const imageSchema = new mongoose.Schema({
         correlation: [Number],
     },
     edgeHistogram: [Number],
+    similarImages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Image' }], // Reference to similar images
 }, { timestamps: true });
 
 module.exports = mongoose.model('Image', imageSchema);

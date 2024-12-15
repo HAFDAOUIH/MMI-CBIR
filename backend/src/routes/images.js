@@ -1,7 +1,7 @@
 // ''
 const express = require('express');
 const router = express.Router();
-const { uploadImages, getImagesByCategory} = require('../controllers/imageController'); // Ensure these controllers exist
+const { uploadImages, getImagesByCategory, findSimilarImages} = require('../controllers/imageController'); // Ensure these controllers exist
 const fs = require('fs'); // Import fs module
 const path = require('path');
 const upload = require('../middleware/uploadMiddleware'); // Ensure this is configured properly
@@ -80,5 +80,8 @@ router.get('/descriptors/:id', async (req, res) => {
         res.status(500).json({ message: 'Error fetching descriptors' });
     }
 });
+
+router.get('/similar/:id', findSimilarImages); // Route for finding similar images
+
 
 module.exports = router;

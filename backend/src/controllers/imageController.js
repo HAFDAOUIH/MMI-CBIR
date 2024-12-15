@@ -23,6 +23,34 @@ const calculateDescriptorsAsync = async (imagePath) => {
     }
 };
 
+// Function to calculate Euclidean distance
+const calculateEuclideanDistance = (a, b) => {
+    if (a.length !== b.length) return Infinity;
+    return Math.sqrt(a.reduce((sum, value, i) => sum + Math.pow(value - b[i], 2), 0));
+};
+
+// Function to precompute similar images
+const precomputeSimilarImages = async (newImage) => {
+    try {
+        const allImages = await Image.find({ _id: { $ne: newImage._id } }).select('dominantColors');
+
+        const similarImages = allImages
+            .map((image) => {
+                const distance = calculateEuclideanDistance(
+                    newImage.dominantColors.flat(),
+                    image.dominantColors.flat()
+                );
+                return { id: image._id, distance };
+            })
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, 5);
+
+        newImage.similarImages = similarImages.map((img) => img.id); // Save similar image IDs
+        await newImage.save();
+    } catch (error) {
+        console.error('Error precomputing similar images:', error.message);
+    }
+};
 
 // Unified function to handle image uploads
 exports.uploadImages = async (req, res) => {
@@ -36,8 +64,10 @@ exports.uploadImages = async (req, res) => {
 
         const imageDocs = await Promise.all(
             files.map(async (file) => {
+                // Step 1: Calculate descriptors
                 const descriptors = await calculateDescriptorsAsync(file.path);
 
+                // Step 2: Save the image to the database
                 const newImage = new Image({
                     filename: file.originalname,
                     filepath: file.path,
@@ -46,13 +76,18 @@ exports.uploadImages = async (req, res) => {
                     dominantColors: descriptors.dominantColors,
                     textureDescriptors: descriptors.textureDescriptors,
                     huMoments: descriptors.huMoments,
-                    textureImage: descriptors.textureImage, // Ensure this is saved
+                    textureImage: descriptors.textureImage,
                     huImage: descriptors.huImage,
-                    glcmFeatures: descriptors.glcmFeatures, // Add this
-                    edgeHistogram: descriptors.edgeHistogram, // Add this
+                    glcmFeatures: descriptors.glcmFeatures,
+                    edgeHistogram: descriptors.edgeHistogram,
                 });
 
-                return newImage.save();
+                await newImage.save();
+
+                // Step 3: Precompute similar images
+                await precomputeSimilarImages(newImage);
+
+                return newImage;
             })
         );
 
@@ -65,7 +100,7 @@ exports.uploadImages = async (req, res) => {
 
 // Fetch images by category
 exports.getImagesByCategory = async (req, res) => {
-    const { category } = req.params; // Category parameter from the URL
+    const { category } = req.params;
     try {
         const images = await Image.find({ category });
         res.json({ images });
@@ -84,19 +119,36 @@ exports.getImageDescriptors = async (req, res) => {
             return res.status(404).json({ message: 'Image not found' });
         }
         res.json({
-            filename: image.filename,        // Add this
+            filename: image.filename,
             filepath: image.filepath,
             histogram: image.histogram,
             dominantColors: image.dominantColors,
             textureDescriptors: image.textureDescriptors,
             huMoments: image.huMoments,
-            textureImage: image.textureImage, // Include texture image path
-            huImage: image.huImage,           // Include Hu moment image path
-            edgeHistogram: image.edgeHistogram, // Include edge histogram
-            glcmFeatures: image.glcmFeatures, // Include GLCM features
+            textureImage: image.textureImage,
+            huImage: image.huImage,
+            edgeHistogram: image.edgeHistogram,
+            glcmFeatures: image.glcmFeatures,
         });
     } catch (error) {
         console.error('Error fetching image descriptors:', error.message);
         res.status(500).json({ message: 'Error fetching image descriptors' });
+    }
+};
+
+// Fetch similar images
+exports.findSimilarImages = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const queryImage = await Image.findById(id).populate('similarImages');
+        if (!queryImage) {
+            return res.status(404).json({ message: 'Query image not found' });
+        }
+
+        res.json({ similarImages: queryImage.similarImages });
+    } catch (error) {
+        console.error('Error finding similar images:', error.message);
+        res.status(500).json({ message: 'Server error while finding similar images' });
     }
 };
