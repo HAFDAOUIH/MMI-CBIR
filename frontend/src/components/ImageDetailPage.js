@@ -95,7 +95,7 @@ const ImageDetailPage = () => {
                 <img
                     src={`http://localhost:5000/uploads/${image.filepath.split('/').pop()}`}                    alt={image.filename}
                     style={{
-                        width: '50%',
+                        width: '20%',
                         borderRadius: '8px',
                         boxShadow: '0px 4px 6px rgba(0,0,0,0.2)',
                     }}
