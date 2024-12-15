@@ -95,27 +95,14 @@ const ImageDetailPage = () => {
                 <img
                     src={`http://localhost:5000/uploads/${image.filepath.split('/').pop()}`}                    alt={image.filename}
                     style={{
-                        width: '50%',
+                        width: '20%',
                         borderRadius: '8px',
                         boxShadow: '0px 4px 6px rgba(0,0,0,0.2)',
                     }}
                 />
 
                 {/* Buttons Section */}
-                <div style={{ marginTop: '20px' }}>
-                    <button onClick={() => setIsDescriptorModalOpen(true)} style={buttonStyle}>
-                        View Descriptors
-                    </button>
-                    <button onClick={downloadImage} style={buttonStyle}>
-                        Download
-                    </button>
-                    <button onClick={handleEdit} style={buttonStyle}>
-                        Edit
-                    </button>
-                    <button onClick={handleDelete} style={deleteButtonStyle}>
-                        Delete
-                    </button>
-                </div>
+
 
                 {/* Descriptor Modal */}
                 {isDescriptorModalOpen && (
