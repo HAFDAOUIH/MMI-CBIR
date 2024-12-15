@@ -1,0 +1,84 @@
+/* Image Card Container */
+.image-card-container {
+    background-color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.image-card-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Image Styling */
+.image-card-image {
+    width: 100%;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.image-card-image:hover {
+    transform: scale(1.05);
+}
+
+/* Filename Styling */
+.image-card-filename {
+    margin: 10px 0;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Button Container */
+.image-card-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* Buttons */
+button {
+    font-size: 0.9rem;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: white;
+}
+
+/* Download Button */
+.button-download {
+    background-color: #4CAF50; /* Green */
+}
+
+.button-download:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+/* Delete Button */
+.button-delete {
+    background-color: #f44336; /* Red */
+}
+
+.button-delete:hover {
+    background-color: #e53935;
+    transform: translateY(-2px);
+}
+
+/* Edit Button */
+.button-edit {
+    background-color: #ff9800; /* Orange */
+}
+
+.button-edit:hover {
+    background-color: #fb8c00;
+    transform: translateY(-2px);
+}

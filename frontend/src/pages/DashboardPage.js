@@ -34,12 +34,20 @@ function DashboardPage() {
     const [abortController, setAbortController] = useState(null); // AbortController to manage cancellations
     const [descriptors, setDescriptors] = useState({});
     const [isDescriptorModalOpen, setIsDescriptorModalOpen] = useState(false);
+    const [isCategoryLoading, setIsCategoryLoading] = useState(false);
 
-    const loadImages = (category) => {
-        fetchImagesByCategory(category).then((data) => {
+    const loadImages = async (category) => {
+        setIsCategoryLoading(true); // Show spinner
+        try {
+            const data = await fetchImagesByCategory(category);
             setImages(data.images || []);
-        });
+        } catch (error) {
+            console.error("Error loading images:", error.message);
+        } finally {
+            setIsCategoryLoading(false); // Hide spinner
+        }
     };
+
 
     useEffect(() => {
         loadImages(selectedCategory);
@@ -159,25 +167,33 @@ function DashboardPage() {
                 {/*</button>*/}
             </div>
 
-            <div
-                style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                    gap: '20px',
-                    padding: '20px',
-                    justifyContent: 'center',
-                }}
-            >
-                {currentImages.map((img) => (
-                    <ImageCard
-                        key={img._id}
-                        image={img}
-                        onDeleteSuccess={handleDeleteClick}
-                        onEditClick={() => handleImageEdit(img)}
-                        onImageClick={() => handleImageClick(img)} // Handle image click for descriptors
-                    />
-                ))}
-            </div>
+            {/* Main content area */}
+            {isCategoryLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+                    <Spinner animation="border" role="status" style={{ width: '3rem', height: '3rem' }} />
+                    <span style={{ marginLeft: '10px', fontSize: '1.2rem' }}>Loading images...</span>
+                </div>
+            ) : (
+                <div
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                        gap: '20px',
+                        padding: '20px',
+                        justifyContent: 'center',
+                    }}
+                >
+                    {currentImages.map((img) => (
+                        <ImageCard
+                            key={img._id}
+                            image={img}
+                            onDeleteSuccess={handleDeleteClick}
+                            onEditClick={() => handleImageEdit(img)}
+                            onImageClick={() => handleImageClick(img)} // Handle image click for descriptors
+                        />
+                    ))}
+                </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
                 <nav>
