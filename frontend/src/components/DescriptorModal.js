@@ -256,15 +256,15 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                 <Modal.Title>Image Descriptors</Modal.Title>
             </Modal.Header>
             <Modal.Body className="descriptor-body">
+                <h5>Color Histograms</h5>
                 {/* Histograms */}
                 <div className="section">
-                    <h5>Color Histograms</h5>
                     <Bar data={combinedHistogramData} options={combinedHistogramOptions}/>
                 </div>
 
                 {/* Dominant Colors */}
+                <h5>Dominant Colors</h5>
                 <div className="section">
-                    <h5>Dominant Colors</h5>
                     <div className="color-palette">
                         {dominantColors.map((color, index) => (
                             <div
@@ -277,10 +277,13 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                 </div>
 
                 {/* Texture Descriptors */}
+                <h5>Gabor Texture Descriptors</h5>
+
                 <div className="section">
-                    <h5>Gabor Texture Descriptors</h5>
                     <div className="chart-container">
-                        <Radar data={createTextureRadarData(textureDescriptors)} options={radarOptions}/>
+                        <div className="saxa">
+                            <Radar data={createTextureRadarData(textureDescriptors)} options={radarOptions}/>
+                        </div>
                         {textureImage ? (
                             <div className="image-wrapper">
                                 <img
@@ -292,17 +295,19 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                                     }}
                                 />
                             </div>
-                                ) : (
-                                <p>Texture highlights are not available.</p>
-                                )}
-                            </div>
-                            </div>
+                        ) : (
+                            <p>Texture highlights are not available.</p>
+                        )}
+                    </div>
+                </div>
 
-                        {/* Hu Moments */}
+                {/* Hu Moments */}
+                <h5>Hu Moments (Shape Features)</h5>
                 <div className="section">
-                    <h5>Hu Moments (Shape Features)</h5>
                     <div className="chart-container">
-                        <Radar data={createHuMomentsRadarData(huMoments)} options={radarOptions}/>
+                        <div className="saxa">
+                            <Radar data={createHuMomentsRadarData(huMoments)} options={radarOptions}/>
+                        </div>
                         {huImage ? (
                             <div className="image-wrapper">
                                 <img
@@ -314,27 +319,28 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                                     }}
                                 />
                             </div>
-                                ) : (
-                                <p>Hu moments highlights are not available.</p>
-                                )}
-                            </div>
-                            </div>
+                        ) : (
+                            <p>Hu moments highlights are not available.</p>
+                        )}
+                    </div>
+                </div>
+                <h5>GLCM Features</h5>
+                {/* GLCM Features */}
+                <div className="sectionn">
 
-                        {/* GLCM Features */}
-                <div className="section">
-                    <h5>GLCM Features</h5>
                     {glcmFeatures && Object.keys(glcmFeatures).length > 0 ? (
-                        <Bar data={createGLCMBarData(glcmFeatures)} options={combinedHistogramOptions} />
+                        <Bar data={createGLCMBarData(glcmFeatures)} options={combinedHistogramOptions}/>
                     ) : (
                         <p>GLCM features are not available for this image.</p>
                     )}
                 </div>
 
                 {/* Edge Histogram */}
-                <div className="section">
-                    <h5>Edge Histogram</h5>
+                <h5>Edge Histogram</h5>
+
+                <div className="sectionn">
                     {edgeHistogram && edgeHistogram.length > 0 ? (
-                        <Bar data={createEdgeHistogramBarData(edgeHistogram)} options={combinedHistogramOptions} />
+                        <Bar data={createEdgeHistogramBarData(edgeHistogram)} options={combinedHistogramOptions}/>
                     ) : (
                         <p>Edge histogram is not available for this image.</p>
                     )}
