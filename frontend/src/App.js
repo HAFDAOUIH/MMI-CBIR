@@ -6,6 +6,7 @@ import Home from './pages/Home'; // Import Home component
 import About from './pages/About'; // Import About component
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import ImageDetailPage from './components/ImageDetailPage';
 
 function App() {
     return (
@@ -20,6 +21,9 @@ function App() {
 
                     {/* Gallery page (Dashboard) */}
                     <Route path="/gallery" element={<GalleryLayout />} />
+
+                    {/* Image detail page */}
+                    <Route path="/image-detail/:id" element={<ImageDetailPage />} />
                 </Routes>
             </div>
         </Router>

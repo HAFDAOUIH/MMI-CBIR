@@ -142,21 +142,21 @@ function DashboardPage() {
             />
 
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px' }}>
-                <button
-                    onClick={handleUploadClick}
-                    style={{
-                        padding: '12px 24px',
-                        fontSize: '1.1rem',
-                        backgroundColor: '#ff6347',
-                        color: '#fff',
-                        borderRadius: '4px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.3s ease',
-                    }}
-                >
-                    Upload Images
-                </button>
+                {/*<button*/}
+                {/*    onClick={handleUploadClick}*/}
+                {/*    style={{*/}
+                {/*        padding: '12px 24px',*/}
+                {/*        fontSize: '1.1rem',*/}
+                {/*        backgroundColor: '#ff6347',*/}
+                {/*        color: '#fff',*/}
+                {/*        borderRadius: '4px',*/}
+                {/*        border: 'none',*/}
+                {/*        cursor: 'pointer',*/}
+                {/*        transition: 'background-color 0.3s ease',*/}
+                {/*    }}*/}
+                {/*>*/}
+                {/*    Upload Images*/}
+                {/*</button>*/}
             </div>
 
             <div

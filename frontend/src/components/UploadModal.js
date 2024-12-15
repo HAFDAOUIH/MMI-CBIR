@@ -43,6 +43,9 @@ function UploadModal({ isOpen, onClose, onUploadSuccess }) {
             onUploadSuccess();
             setIsUploading(false); // Reset uploading state
             onClose();
+            // add for handle open new page when downloading
+            window.location.href = `/image-detail/${response.data.images[0]._id}`;
+
         } catch (err) {
             console.error('Upload failed:', err.response?.data || err.message);
             alert('Failed to upload images');
