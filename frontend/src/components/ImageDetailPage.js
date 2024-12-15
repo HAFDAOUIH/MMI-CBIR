@@ -102,7 +102,12 @@ const ImageDetailPage = () => {
                 />
 
                 {/* Buttons Section */}
+                <div style={{ marginTop: '20px' }}>
+                    <button onClick={() => setIsDescriptorModalOpen(true)} style={buttonStyle}>
+                        View Descriptors
+                    </button>
 
+                </div>
 
                 {/* Descriptor Modal */}
                 {isDescriptorModalOpen && (
