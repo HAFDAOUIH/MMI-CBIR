@@ -33,7 +33,7 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
     const [descriptors, setDescriptors] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [imageKey, setImageKey] = useState(0); // To force re-render of images
-    const [imageSize, setImageSize] = useState({ width: 400, height: 400 });
+    const [imageSize, setImageSize] = useState({ width: 600, height: 600 });
     const [imageLoaded, setImageLoaded] = useState({ texture: false, hu: false }); // Track loaded images
 
     const handleImageLoad = (e, type) => {
