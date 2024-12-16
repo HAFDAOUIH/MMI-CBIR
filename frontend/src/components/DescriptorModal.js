@@ -32,7 +32,19 @@ ChartJS.register(
 const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) => {
     const [descriptors, setDescriptors] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [imageKey, setImageKey] = useState(0); // To force re-render of images
+    const [imageSize, setImageSize] = useState({ width: 400, height: 400 });
+    const [imageLoaded, setImageLoaded] = useState({ texture: false, hu: false }); // Track loaded images
 
+    const handleImageLoad = (e, type) => {
+        const img = e.target;
+        const ratio = img.naturalWidth / img.naturalHeight;
+        setImageSize({
+            width: ratio > 1 ? 400 : 400 * ratio,
+            height: ratio > 1 ? 400 / ratio : 400,
+        });
+        setImageLoaded((prev) => ({ ...prev, [type]: true }));
+    };
     useEffect(() => {
         if (show && imageId) {
             const fetchDescriptors = async () => {
@@ -56,7 +68,11 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
 
     if (isLoading) {
         return (
-            <Modal show={show} onHide={onHide} className="animated-modal">
+            <Modal show={show}
+                   onHide={onHide}
+                   size="xl"
+                   className="animated-modal"
+                   unmountOnExit >
                 <Modal.Header closeButton>
                     <Modal.Title>Loading Descriptors...</Modal.Title>
                 </Modal.Header>
@@ -310,16 +326,20 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                 <div className="section">
                     <div className="chart-container">
                         <div className="saxa">
-                            <Radar data={createTextureRadarData(textureDescriptors)} options={radarOptions}/>
-                        </div>
+                            <Radar
+                                key={JSON.stringify(textureDescriptors)}
+                                data={createTextureRadarData(textureDescriptors)}
+                                options={radarOptions}
+                            />                        </div>
                         {textureImage ? (
-                            <div className="image-wrapper">
+                            <div className="image-wrapper" style={{width: imageSize.width, height: imageSize.height}}>
                                 <img
-                                    src={`http://localhost:5001${textureImage}`}  // textureImage already includes /static
+                                    key={textureImage + new Date().getTime()} /* Force reload */
+                                    src={`http://localhost:5001${textureImage}`}
                                     alt="Texture Highlights"
                                     onError={(e) => {
                                         e.target.style.display = 'none'; // Hide the image if it fails to load
-                                        console.error('Failed to load texture image:', textureImage);
+                                        console.error("Failed to load texture image:", textureImage);
                                     }}
                                 />
                             </div>
@@ -334,16 +354,17 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
                 <div className="section">
                     <div className="chart-container">
                         <div className="saxa">
-                            <Radar data={createHuMomentsRadarData(huMoments)} options={radarOptions}/>
+                        <Radar data={createHuMomentsRadarData(huMoments)} options={radarOptions}/>
                         </div>
                         {huImage ? (
-                            <div className="image-wrapper">
+                            <div className="image-wrapper" style={{width: imageSize.width, height: imageSize.height}}>
                                 <img
+                                    key={huImage + new Date().getTime()} /* Force reload */
                                     src={`http://localhost:5001${huImage}`}
                                     alt="Hu Moment Highlights"
                                     onError={(e) => {
-                                        e.target.style.display = 'none'; // Hide the image if it fails to load
-                                        console.error('Failed to load Hu moments image:', huImage);
+                                        e.target.style.display = 'none';
+                                        console.error("Failed to load Hu moments image:", huImage);
                                     }}
                                 />
                             </div>
