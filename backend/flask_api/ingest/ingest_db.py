@@ -4,34 +4,59 @@ import os
 # Set your backend URL here
 backend_url = 'http://localhost:5000/api/images/upload'
 
-# Folder containing your images (make sure the images are inside the folder)
-image_folder = 'RSSCN7-master/aGrass'
+# Folder containing your images
+image_folder = '/home/hafdaoui/Downloads/RSSCN7-master/aGrass'
 
 # Category to which you want to upload the images
 category = 'Grass'
 
-# Prepare the list of images to upload (we'll grab all files from the folder)
+# Fetch all images in the folder with proper extensions
 images = [f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))]
 
-# Check if there are more than 400 images (if you want to limit the upload to 400)
-images = images[:400]  # Limit to 400 images
+# Error handling: check if the folder has images
+if not images:
+    print("Error: No images found in the folder!")
+    exit()
 
-# Create a dictionary for the category
-data = {'category': category}
+# Limit the images to one for testing
+images = images[:1]  # Upload only one image for testing
 
-# Prepare the files to be uploaded
-files = [('images', (image, open(os.path.join(image_folder, image), 'rb'))) for image in images]
+# Test with one image
+def upload_single_image():
+    """Upload a single image to test the endpoint."""
+    image = images[0]
+    image_path = os.path.join(image_folder, image)
 
-# Send the POST request to upload the images
-response = requests.post(backend_url, data=data, files=files)
+    # Validate the file exists
+    if not os.path.exists(image_path):
+        print(f"Error: Image file {image_path} does not exist.")
+        return
 
-# Close file handles after upload
-for _, file in files:
-    file[1].close()
+    print(f"Attempting to upload image: {image_path}")
 
-# Check if the upload was successful
-if response.status_code == 200:
-    print(f"Successfully uploaded {len(images)} images to category {category}.")
-else:
-    print(f"Failed to upload images. Status Code: {response.status_code}")
-    print(response.text)
+    # Prepare data and file
+    data = {'category': category}
+    files = {'images': (image, open(image_path, 'rb'))}
+
+    try:
+        response = requests.post(backend_url, data=data, files=files)
+        # Close the file after uploading
+        files['images'][1].close()
+
+        # Check response
+        if response.status_code == 200:
+            print(f"Successfully uploaded image: {image}")
+        else:
+            print(f"Failed to upload image: {image}")
+            print(f"Status Code: {response.status_code}")
+            print("Response Error:", response.text)
+
+
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed for image {image}: {e}")
+    except Exception as e:
+        print(f"Unexpected error occurred: {e}")
+
+# Run the test
+upload_single_image()

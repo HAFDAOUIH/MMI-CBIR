@@ -161,20 +161,48 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
         maintainAspectRatio: true,
     };
 
-    const createTextureRadarData = (textureDescriptors) => ({
-        labels: Array.from({ length: Math.min(textureDescriptors.length, 50) }, (_, i) => `Descriptor ${i + 1}`),
-        datasets: [
-            {
-                label: "Texture Descriptors",
-                data: textureDescriptors.slice(0, 50),
-                backgroundColor: "rgba(54, 162, 235, 0.2)",
-                borderColor: "rgba(54, 162, 235, 1)",
-                borderWidth: 1,
-            },
-        ],
-    });
+    const createTextureRadarData = (textureDescriptors) => {
+        if (!textureDescriptors || textureDescriptors.length === 0) {
+            console.warn("Texture descriptors are undefined or empty.");
+            return {
+                labels: [],
+                datasets: [],
+            };
+        }
+
+        // Generate labels for the Gabor features (mean, variance, energy for each filter)
+        const numFeatures = textureDescriptors.length / 3;
+        const labels = [];
+        for (let i = 0; i < numFeatures; i++) {
+            labels.push(`Filter ${i + 1} - Mean`, `Filter ${i + 1} - Variance`, `Filter ${i + 1} - Energy`);
+        }
+
+        return {
+            labels,
+            datasets: [
+                {
+                    label: "Summarized Gabor Descriptors",
+                    data: textureDescriptors,
+                    backgroundColor: "rgba(54, 162, 235, 0.2)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1,
+                },
+            ],
+        };
+    };
+
 
     const createHuMomentsRadarData = (huMoments, referenceMoments = null) => {
+        const huLabels = [
+            "Φ1: Spatial Spread", // Hu Moment 1
+            "Φ2: Central Symmetry", // Hu Moment 2
+            "Φ3: Skewness", // Hu Moment 3
+            "Φ4: Flatness/Elongation", // Hu Moment 4
+            "Φ5: Irregularities", // Hu Moment 5
+            "Φ6: Curvature", // Hu Moment 6
+            "Φ7: Reflection Symmetry", // Hu Moment 7
+        ];
+
         const datasets = [
             {
                 label: "Hu Moments (Normalized)",
@@ -196,7 +224,7 @@ const DescriptorModal = ({ show, onHide, imageId, referenceImageDescriptors }) =
         }
 
         return {
-            labels: huMoments.map((_, i) => `Moment ${i + 1}`),
+            labels: huLabels,
             datasets,
         };
     };

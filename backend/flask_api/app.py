@@ -96,43 +96,69 @@ def calculate_hu_moments_with_contours(image):
     try:
         logger.debug("Calculating Hu moments with contour overlay...")
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        _, thresholded = cv2.threshold(gray_image, 128, 255, cv2.THRESH_BINARY)
+        _, thresholded = cv2.threshold(gray_image, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
         contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if not contours:
+            logger.error("No contours found in the image.")
+            return [0] * 7, image
 
-        # Draw largest contour
         largest_contour = max(contours, key=cv2.contourArea, default=None)
-        contour_image = image.copy()
-        if largest_contour is not None:
-            cv2.drawContours(contour_image, [largest_contour], -1, (0, 0, 255), 3)
+        if cv2.contourArea(largest_contour) == 0:
+            logger.error("Largest contour has zero area.")
+            return [0] * 7, image
 
-        # Calculate Hu moments for the largest contour
+        contour_image = image.copy()
+        cv2.drawContours(contour_image, [largest_contour], -1, (0, 0, 255), 3)
+
         moments = cv2.moments(largest_contour)
+        if moments["m00"] == 0:
+            logger.error("Moments m00 is zero; cannot calculate Hu moments.")
+            return [0] * 7, contour_image
+
         hu_moments = cv2.HuMoments(moments).flatten().tolist()
+        logger.debug(f"Hu Moments: {hu_moments}")
+
         return hu_moments, contour_image
     except Exception as e:
         logger.error(f"Error calculating Hu moments with contours: {e}")
-        return [], image
+        return [0] * 7, image
+
 
 def calculate_gabor_texture_with_regions(image):
     try:
-        logger.debug("Calculating Gabor texture with region highlights...")
+        logger.debug("Calculating Gabor texture with normalized descriptors...")
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gabor_kernel = cv2.getGaborKernel((21, 21), 5, 1, 10, 0.5, 0, ktype=cv2.CV_32F)
-        gabor = cv2.filter2D(gray_image, cv2.CV_8UC3, gabor_kernel)
 
-        # Normalize Gabor output to [0, 255]
-        gabor_normalized = cv2.normalize(gabor, None, 0, 255, cv2.NORM_MINMAX)
-        _, thresholded = cv2.threshold(gabor_normalized, 128, 255, cv2.THRESH_BINARY)
+        # Define Gabor kernels with varying orientations and frequencies
+        orientations = [0, np.pi/4, np.pi/2, 3*np.pi/4]  # 4 directions
+        frequencies = [0.1, 0.3, 0.5]  # 3 frequencies
+        gabor_features = []
 
-        # Find contours
-        contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        highlighted_image = image.copy()
-        cv2.drawContours(highlighted_image, contours, -1, (0, 255, 0), 2)
+        for theta in orientations:
+            for frequency in frequencies:
+                gabor_kernel = cv2.getGaborKernel((21, 21), 5, theta, frequency, 0.5, 0, ktype=cv2.CV_32F)
+                filtered_image = cv2.filter2D(gray_image, cv2.CV_32F, gabor_kernel)
 
-        return gabor.flatten().tolist(), highlighted_image
+                # Compute texture statistics and normalize
+                mean = float(np.mean(filtered_image))
+                variance = float(np.var(filtered_image))
+                energy = float(np.sum(filtered_image ** 2))
+
+                # Normalize values to the range [0, 1]
+                normalized_mean = mean / 255.0
+                normalized_variance = variance / (255.0 ** 2)
+                normalized_energy = energy / (filtered_image.size * (255.0 ** 2))
+
+                gabor_features.extend([normalized_mean, normalized_variance, normalized_energy])
+
+        logger.debug(f"Normalized Gabor descriptors: {gabor_features[:10]}... (truncated)")
+        return gabor_features, gray_image
     except Exception as e:
-        logger.error(f"Error calculating Gabor texture with regions: {e}")
+        logger.error(f"Error calculating Gabor texture descriptors: {e}")
         return [], image
+
+
 
 def calculate_edge_histogram(image):
     try:

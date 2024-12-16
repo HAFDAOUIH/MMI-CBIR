@@ -105,7 +105,7 @@ const precomputeSimilarImages = async (newImage) => {
         // Sort and take the top 20 images
         const top20Images = similarImages
             .sort((a, b) => a.distance - b.distance)
-            .slice(0, 20)
+            .slice(0, 5)
             .map((img) => img.id);
 
         // Save the precomputed similar images in the new image document
