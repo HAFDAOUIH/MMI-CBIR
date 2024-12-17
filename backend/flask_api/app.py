@@ -127,36 +127,43 @@ def calculate_hu_moments_with_contours(image):
 
 def calculate_gabor_texture_with_regions(image):
     try:
-        logger.debug("Calculating Gabor texture with normalized descriptors...")
+        logger.debug("Calculating Gabor texture with region highlights...")
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-        # Define Gabor kernels with varying orientations and frequencies
-        orientations = [0, np.pi/4, np.pi/2, 3*np.pi/4]  # 4 directions
-        frequencies = [0.1, 0.3, 0.5]  # 3 frequencies
-        gabor_features = []
+        # Define Gabor kernels for multiple orientations and scales
+        orientations = [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]  # Directions
+        frequencies = [0.05, 0.1, 0.3]  # Scales (frequencies)
+
+        gabor_responses = []
+        highlighted_image = image.copy()
 
         for theta in orientations:
             for frequency in frequencies:
-                gabor_kernel = cv2.getGaborKernel((21, 21), 5, theta, frequency, 0.5, 0, ktype=cv2.CV_32F)
-                filtered_image = cv2.filter2D(gray_image, cv2.CV_32F, gabor_kernel)
+                # Generate Gabor kernel
+                gabor_kernel = cv2.getGaborKernel((21, 21), 4, theta, frequency, 0.5, 0, ktype=cv2.CV_32F)
 
-                # Compute texture statistics and normalize
-                mean = float(np.mean(filtered_image))
-                variance = float(np.var(filtered_image))
-                energy = float(np.sum(filtered_image ** 2))
+                # Apply Gabor filter
+                filtered = cv2.filter2D(gray_image, cv2.CV_8UC3, gabor_kernel)
+                gabor_responses.append(filtered)
 
-                # Normalize values to the range [0, 1]
-                normalized_mean = mean / 255.0
-                normalized_variance = variance / (255.0 ** 2)
-                normalized_energy = energy / (filtered_image.size * (255.0 ** 2))
+                # Normalize and threshold to detect regions
+                normalized = cv2.normalize(filtered, None, 0, 255, cv2.NORM_MINMAX)
+                _, thresholded = cv2.threshold(normalized, 200, 255, cv2.THRESH_BINARY)
 
-                gabor_features.extend([normalized_mean, normalized_variance, normalized_energy])
+                # Find and draw contours on the highlighted image
+                contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                cv2.drawContours(highlighted_image, contours, -1, (0, 255, 0), 2)
 
-        logger.debug(f"Normalized Gabor descriptors: {gabor_features[:10]}... (truncated)")
-        return gabor_features, gray_image
+        # Flatten descriptors for numerical features
+        combined_gabor_features = [filtered.mean() for filtered in gabor_responses]
+
+        logger.debug(f"Gabor texture descriptors: {combined_gabor_features[:10]}...")
+
+        return combined_gabor_features, highlighted_image
     except Exception as e:
-        logger.error(f"Error calculating Gabor texture descriptors: {e}")
+        logger.error(f"Error calculating Gabor texture with regions: {e}")
         return [], image
+
 
 
 
