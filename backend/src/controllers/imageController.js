@@ -252,7 +252,7 @@ exports.getSimilarImagesByDescriptors = async (req, res) => {
                 similarity: computeSimilarity(image.textureDescriptors, queryDescriptors),
             }))
             .sort((a, b) => b.similarity - a.similarity) // Sort by similarity in descending order
-            .slice(0, 10) // Return the top 10 similar images
+            .slice(0, 5) // Return the top 10 similar images
             .map((entry) => entry.image);
 
         res.json({ similarImages });
