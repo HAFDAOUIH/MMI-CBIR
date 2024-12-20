@@ -13,7 +13,7 @@ import {
     Filler,
 } from "chart.js";
 import { Bar, Radar } from "react-chartjs-2";
-import { getImageDescriptors } from "../services/imageService";
+import { getImageDescriptors, getSimilarImages } from "../services/imageService";
 import "./DescriptorModal.css"; // Custom styling
 
 // Register required Chart.js components

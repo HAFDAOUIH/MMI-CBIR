@@ -4,6 +4,11 @@ import { getImageDescriptors, getSimilarImages } from '../services/imageService'
 import DescriptorModal from './DescriptorModal';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import axios from 'axios';
+import SimilarImagesSection from './SimilarImagesSection';
+import FeedbackInsights from './FeedbackInsights';
+import AnnotateImages from './AnnotateImages';
+import ProgressBar from './ProgressBar';
 
 const ImageDetailPage = () => {
     const { id } = useParams(); // Get the image ID from the URL
@@ -13,6 +18,14 @@ const ImageDetailPage = () => {
     const [isLoading, setIsLoading] = useState(true); // Loading state
     const [error, setError] = useState(null); // Error state
     const [similarImages, setSimilarImages] = useState([]);
+    const [relevantImages, setRelevantImages] = useState([]); // Relevant images for feedback
+    const [nonRelevantImages, setNonRelevantImages] = useState([]); // Non-relevant images for feedback
+    const [progress, setProgress] = useState(0);
+    const [previousDescriptors, setPreviousDescriptors] = useState(null);
+    const [updatedDescriptors, setUpdatedDescriptors] = useState(null);
+    const [feedbackImpact, setFeedbackImpact] = useState('');
+    const [annotations, setAnnotations] = useState({});
+    const [feedbackMap, setFeedbackMap] = useState({}); // Map to store feedback (keyed by image ID)
 
     useEffect(() => {
         const fetchImageData = async () => {
@@ -41,6 +54,49 @@ const ImageDetailPage = () => {
         fetchImageData();
     }, [id]);
 
+    const handleRelevanceFeedback = async () => {
+        try {
+            setProgress(50); // Simulate progress during processing
+            const response = await axios.post('http://localhost:5000/api/images/relevance-feedback', {
+                queryDescriptors: descriptors.textureDescriptors,
+                relevantImages: relevantImages.map((img) => img.textureDescriptors),
+                nonRelevantImages: nonRelevantImages.map((img) => img.textureDescriptors),
+            });
+
+            const updatedQueryDescriptors = response.data.newQueryDescriptors;
+
+            // Fetch updated similar images based on the new query descriptors
+            const updatedSimilarImages = await axios.post('http://localhost:5000/api/images/similar', {
+                queryDescriptors: updatedQueryDescriptors,
+            });
+
+            setPreviousDescriptors(descriptors);
+            setUpdatedDescriptors(updatedQueryDescriptors);
+            setSimilarImages(updatedSimilarImages.data.similarImages);
+
+            setFeedbackImpact(`Updated rankings based on feedback. Top ${updatedSimilarImages.data.similarImages.length} images refreshed.`);
+            setProgress(100); // Mark progress as complete
+        } catch (error) {
+            console.error('Error during relevance feedback:', error.message);
+        }
+    };
+
+    const markRelevant = (img) => {
+        setFeedbackMap((prev) => ({
+            ...prev,
+            [img._id]: 'relevant',
+        }));
+        setRelevantImages((prev) => [...prev, img]);
+    };
+
+    const markNonRelevant = (img) => {
+        setFeedbackMap((prev) => ({
+            ...prev,
+            [img._id]: 'non-relevant',
+        }));
+        setNonRelevantImages((prev) => [...prev, img]);
+    };
+
     if (isLoading) {
         return (
             <div style={{ textAlign: 'center', marginTop: '50px' }}>
@@ -59,31 +115,6 @@ const ImageDetailPage = () => {
         );
     }
 
-    if (!image) {
-        return (
-            <div style={{ textAlign: 'center', marginTop: '50px' }}>
-                <h3>No Data</h3>
-                <p>Image details could not be found.</p>
-            </div>
-        );
-    }
-
-    // Utility function to download the image
-    const downloadImage = () => {
-        const link = document.createElement('a');
-        link.href = `http://localhost:5000/${image.filepath}`;
-        link.download = image.filename;
-        link.click();
-    };
-
-    const handleDelete = () => {
-        alert('Delete functionality is not implemented in this demo.');
-    };
-
-    const handleEdit = () => {
-        alert('Edit functionality is not implemented in this demo.');
-    };
-
     return (
         <div>
             {/* Navbar */}
@@ -93,7 +124,8 @@ const ImageDetailPage = () => {
             <div style={{ textAlign: 'center', padding: '20px' }}>
                 <h1 style={{ marginBottom: '10px' }}>{image.filename}</h1>
                 <img
-                    src={`http://localhost:5000/uploads/${image.filepath.split('/').pop()}`}                    alt={image.filename}
+                    src={`http://localhost:5000/uploads/${image.filepath.split('/').pop()}`}
+                    alt={image.filename}
                     style={{
                         width: '20%',
                         borderRadius: '8px',
@@ -106,7 +138,6 @@ const ImageDetailPage = () => {
                     <button onClick={() => setIsDescriptorModalOpen(true)} style={buttonStyle}>
                         View Descriptors
                     </button>
-
                 </div>
 
                 {/* Descriptor Modal */}
@@ -120,43 +151,48 @@ const ImageDetailPage = () => {
                 )}
 
                 {/* Similar Images Section */}
-                <div style={{marginTop: '40px'}}>
-                    <h2>Similar Images</h2>
-                    <div
+                <SimilarImagesSection
+                    similarImages={similarImages}
+                    feedbackMap={feedbackMap}
+                    markRelevant={markRelevant}
+                    markNonRelevant={markNonRelevant}
+                />
+
+                {/* Feedback Progress */}
+                <ProgressBar progress={progress} />
+
+                {/* Feedback Insights */}
+                {updatedDescriptors && (
+                    <FeedbackInsights
+                        previousDescriptors={previousDescriptors}
+                        updatedDescriptors={updatedDescriptors}
+                        impact={feedbackImpact}
+                    />
+                )}
+
+                {/* Image Annotations */}
+                <AnnotateImages annotations={annotations} setAnnotations={setAnnotations} />
+
+                {/* Feedback Submission */}
+                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                        onClick={handleRelevanceFeedback}
                         style={{
-                            display: 'flex',
-                            justifyContent: 'center', // Center horizontally
-                            alignItems: 'center',     // Center vertically (optional)
-                            flexWrap: 'wrap',         // Allow items to wrap to the next line
-                            gap: '20px',              // Add space between items
-                            padding: '10px',
+                            padding: '10px 20px',
+                            backgroundColor: '#4CAF50',
+                            color: '#fff',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            margin: '10px',
                         }}
                     >
-                        {similarImages.map((img) => (
-                            <div key={img._id} style={{textAlign: 'center'}}> {/* Ensure text is centered */}
-                                <img
-                                    src={`http://localhost:5000/uploads/${img.filepath.split('/').pop()}`}
-                                    alt={img.filename}
-                                    style={{
-                                        width: '150px',
-                                        height: '150px',
-                                        objectFit: 'cover',  // Maintain aspect ratio
-                                        borderRadius: '8px',
-                                        boxShadow: '0px 4px 6px rgba(0,0,0,0.2)',
-                                        cursor: 'pointer',
-                                    }}
-                                    onClick={() => window.location.href = `/image-detail/${img._id}`}
-                                />
-                                <p style={{marginTop: '10px', fontSize: '0.9rem'}}>{img.filename}</p>
-                            </div>
-                        ))}
-                    </div>
-
+                        Submit Feedback
+                    </button>
                 </div>
             </div>
 
             {/* Footer */}
-            <Footer/>
+            <Footer />
         </div>
     );
 };
@@ -172,11 +208,6 @@ const buttonStyle = {
     cursor: 'pointer',
     fontSize: '16px',
     boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
-};
-
-const deleteButtonStyle = {
-    ...buttonStyle,
-    backgroundColor: '#f44336',
 };
 
 export default ImageDetailPage;
