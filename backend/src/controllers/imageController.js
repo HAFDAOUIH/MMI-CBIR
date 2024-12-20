@@ -217,3 +217,60 @@ exports.findSimilarImages = async (req, res) => {
         res.status(500).json({ message: 'Server error while finding similar images' });
     }
 };
+
+exports.relevanceFeedback = async (req, res) => {
+    try {
+        const { queryDescriptors, relevantImages, nonRelevantImages } = req.body;
+        const response = await axios.post('http://localhost:5001/api/relevance_feedback', {
+            query_descriptors: queryDescriptors,
+            relevant_images: relevantImages,
+            non_relevant_images: nonRelevantImages,
+            alpha: 1.0,
+            beta: 0.5,
+        });
+        res.json({ newQueryDescriptors: response.data.new_query_descriptors });
+    } catch (error) {
+        console.error('Error during relevance feedback:', error.message);
+        res.status(500).json({ error: 'Relevance feedback failed' });
+    }
+};
+
+
+exports.getSimilarImagesByDescriptors = async (req, res) => {
+    try {
+        const { queryDescriptors } = req.body;
+
+        if (!queryDescriptors || queryDescriptors.length === 0) {
+            return res.status(400).json({ error: 'Query descriptors are required' });
+        }
+
+        // Retrieve all images and compute their similarity with the queryDescriptors
+        const allImages = await Image.find(); // Assuming `Image` is your model
+        const similarImages = allImages
+            .map((image) => ({
+                image,
+                similarity: computeSimilarity(image.textureDescriptors, queryDescriptors),
+            }))
+            .sort((a, b) => b.similarity - a.similarity) // Sort by similarity in descending order
+            .slice(0, 10) // Return the top 10 similar images
+            .map((entry) => entry.image);
+
+        res.json({ similarImages });
+    } catch (error) {
+        console.error('Error fetching similar images:', error.message);
+        res.status(500).json({ error: 'Failed to fetch similar images' });
+    }
+};
+
+// Utility function to compute similarity
+const computeSimilarity = (descriptors1, descriptors2) => {
+    if (!descriptors1 || !descriptors2 || descriptors1.length !== descriptors2.length) {
+        return 0;
+    }
+
+    // Example: Euclidean Distance (you can replace with other similarity measures)
+    const distance = Math.sqrt(
+        descriptors1.reduce((sum, value, index) => sum + Math.pow(value - descriptors2[index], 2), 0)
+    );
+    return 1 / (1 + distance); // Higher value means more similarity
+};

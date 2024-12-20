@@ -1,7 +1,7 @@
 // ''
 const express = require('express');
 const router = express.Router();
-const { uploadImages, getImagesByCategory, findSimilarImages} = require('../controllers/imageController'); // Ensure these controllers exist
+const { uploadImages, getImagesByCategory, findSimilarImages, relevanceFeedback, getSimilarImagesByDescriptors} = require('../controllers/imageController'); // Ensure these controllers exist
 const fs = require('fs'); // Import fs module
 const path = require('path');
 const upload = require('../middleware/uploadMiddleware'); // Ensure this is configured properly
@@ -83,5 +83,8 @@ router.get('/descriptors/:id', async (req, res) => {
 
 router.get('/similar/:id', findSimilarImages); // Route for finding similar images
 
+router.post('/relevance-feedback', relevanceFeedback);
+
+router.post('/similar', getSimilarImagesByDescriptors);
 
 module.exports = router;

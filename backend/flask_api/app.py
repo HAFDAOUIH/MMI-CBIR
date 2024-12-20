@@ -260,6 +260,37 @@ def calculate_descriptors():
         return jsonify({'error': 'Internal server error'}), 500
 
 
+@app.route('/api/relevance_feedback', methods=['POST'])
+def relevance_feedback():
+    try:
+        data = request.json
+        query_descriptors = data.get('query_descriptors')
+        relevant_images = data.get('relevant_images', [])
+        non_relevant_images = data.get('non_relevant_images', [])
+
+        # Validation
+        if not query_descriptors:
+            return jsonify({'error': 'Query descriptors are required'}), 400
+        if not relevant_images and not non_relevant_images:
+            return jsonify({'error': 'Relevant or non-relevant images must be provided'}), 400
+
+        # Convert to numpy arrays
+        query_descriptors = np.array(query_descriptors)
+        relevant_descriptors = np.array(relevant_images) if relevant_images else np.zeros_like(query_descriptors)
+        non_relevant_descriptors = np.array(non_relevant_images) if non_relevant_images else np.zeros_like(query_descriptors)
+
+        # Calculate new query descriptors using QPM
+        alpha = float(data.get('alpha', 1.0))
+        beta = float(data.get('beta', 0.5))
+        updated_query = query_descriptors + alpha * relevant_descriptors.mean(axis=0)
+        if len(non_relevant_images) > 0:
+            updated_query -= beta * non_relevant_descriptors.mean(axis=0)
+
+        return jsonify({'new_query_descriptors': updated_query.tolist()})
+    except Exception as e:
+        logger.error(f"Error in relevance feedback: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 
 @app.route('/static/<path:filename>')
 def static_files(filename):
