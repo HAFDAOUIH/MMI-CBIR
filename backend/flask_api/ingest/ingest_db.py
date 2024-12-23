@@ -5,10 +5,10 @@ import os
 backend_url = 'http://localhost:5000/api/images/upload'
 
 # Folder containing your images
-image_folder = '/home/hafdaoui/Downloads/RSSCN7-master/gParking'
+image_folder = 'RSSCN7-master/aGrass'
 
 # Category to which you want to upload the images
-category = 'Parking'
+category = 'Grass'
 
 # Fetch all images in the folder with proper extensions
 images = [f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))]

@@ -1,28 +1,28 @@
-import React from 'react';
+import React from "react";
+import Modal from "react-modal";
 
-function ProgressBar({ progress }) {
+
+// Custom styles for the modal
+const customStyles = {
+    content: {
+        top: "50%",
+        left: "50%",
+        right: "auto",
+        bottom: "auto",
+        marginRight: "-50%",
+        transform: "translate(-50%, -50%)",
+        textAlign: "center",
+    },
+};
+
+function ProgressBar({ isLoading }) {
     return (
-        <div style={{ marginTop: '20px' }}>
-            <h4>Feedback Progress</h4>
-            <div
-                style={{
-                    width: '100%',
-                    backgroundColor: '#ccc',
-                    borderRadius: '5px',
-                    overflow: 'hidden',
-                    height: '20px',
-                }}
-            >
-                <div
-                    style={{
-                        width: `${progress}%`,
-                        backgroundColor: '#4CAF50',
-                        height: '100%',
-                        transition: 'width 0.3s ease-in-out',
-                    }}
-                ></div>
+        <Modal isOpen={isLoading} style={customStyles} contentLabel="Feedback Progress">
+            <div>
+                <h3>Processing Feedback...</h3>
+                <div className="spinner"></div>
             </div>
-        </div>
+        </Modal>
     );
 }
 

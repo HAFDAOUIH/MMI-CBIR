@@ -8,7 +8,44 @@ import axios from 'axios';
 import SimilarImagesSection from './SimilarImagesSection';
 import FeedbackInsights from './FeedbackInsights';
 import AnnotateImages from './AnnotateImages';
-import ProgressBar from './ProgressBar';
+import Modal from 'react-modal';
+
+const customStyles = {
+    content: {
+        top: '50%',
+        left: '50%',
+        right: 'auto',
+        bottom: 'auto',
+        marginRight: '-50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center',
+    },
+};
+
+const titleStyle = {
+    fontSize: '2.5rem',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    margin: '20px 0',
+    fontFamily: 'Arial, sans-serif',
+};
+
+const buttonStyle = {
+    padding: '10px 15px',
+    margin: '10px',
+    backgroundColor: '#333',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    transition: 'background-color 0.3s ease',
+};
+
+const sectionSeparator = {
+    borderTop: '2px solid #ccc',
+    margin: '20px 0',
+};
 
 const ImageDetailPage = () => {
     const { id } = useParams(); // Get the image ID from the URL
@@ -20,12 +57,26 @@ const ImageDetailPage = () => {
     const [similarImages, setSimilarImages] = useState([]);
     const [relevantImages, setRelevantImages] = useState([]); // Relevant images for feedback
     const [nonRelevantImages, setNonRelevantImages] = useState([]); // Non-relevant images for feedback
-    const [progress, setProgress] = useState(0);
+    const [isProgressModalOpen, setIsProgressModalOpen] = useState(false); // Progress modal state
     const [previousDescriptors, setPreviousDescriptors] = useState(null);
     const [updatedDescriptors, setUpdatedDescriptors] = useState(null);
     const [feedbackImpact, setFeedbackImpact] = useState('');
     const [annotations, setAnnotations] = useState({});
     const [feedbackMap, setFeedbackMap] = useState({}); // Map to store feedback (keyed by image ID)
+    const descriptorNames = [
+        "Color Histogram (Blue)",
+        "Color Histogram (Green)",
+        "Color Histogram (Red)",
+        "Dominant Colors",
+        "Gabor Texture Descriptors",
+        "Hu Moments",
+        "Edge Histogram",
+        "GLCM Contrast",
+        "GLCM Dissimilarity",
+        "GLCM Homogeneity",
+        "GLCM Energy",
+        "GLCM Correlation"
+    ];
 
     useEffect(() => {
         const fetchImageData = async () => {
@@ -56,7 +107,8 @@ const ImageDetailPage = () => {
 
     const handleRelevanceFeedback = async () => {
         try {
-            setProgress(50); // Simulate progress during processing
+            setIsProgressModalOpen(true); // Show progress modal
+
             const response = await axios.post('http://localhost:5000/api/images/relevance-feedback', {
                 queryDescriptors: descriptors.textureDescriptors,
                 relevantImages: relevantImages.map((img) => img.textureDescriptors),
@@ -75,9 +127,10 @@ const ImageDetailPage = () => {
             setSimilarImages(updatedSimilarImages.data.similarImages);
 
             setFeedbackImpact(`Updated rankings based on feedback. Top ${updatedSimilarImages.data.similarImages.length} images refreshed.`);
-            setProgress(100); // Mark progress as complete
         } catch (error) {
             console.error('Error during relevance feedback:', error.message);
+        } finally {
+            setIsProgressModalOpen(false); // Hide progress modal
         }
     };
 
@@ -121,8 +174,7 @@ const ImageDetailPage = () => {
             <Navbar />
 
             {/* Main Image Section */}
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-                <h1 style={{ marginBottom: '10px' }}>{image.filename}</h1>
+            <div style={{textAlign: 'center', padding: '20px'}}>
                 <img
                     src={`http://localhost:5000/uploads/${image.filepath.split('/').pop()}`}
                     alt={image.filename}
@@ -134,7 +186,7 @@ const ImageDetailPage = () => {
                 />
 
                 {/* Buttons Section */}
-                <div style={{ marginTop: '20px' }}>
+                <div style={{marginTop: '20px'}}>
                     <button onClick={() => setIsDescriptorModalOpen(true)} style={buttonStyle}>
                         View Descriptors
                     </button>
@@ -150,6 +202,11 @@ const ImageDetailPage = () => {
                     />
                 )}
 
+
+                {/* Separator */}
+                {/*<div style={{borderTop: '2px solid #ccc', margin: '20px 0'}}></div>*/}
+
+                <div style={sectionSeparator}></div>
                 {/* Similar Images Section */}
                 <SimilarImagesSection
                     similarImages={similarImages}
@@ -157,9 +214,18 @@ const ImageDetailPage = () => {
                     markRelevant={markRelevant}
                     markNonRelevant={markNonRelevant}
                 />
-
-                {/* Feedback Progress */}
-                <ProgressBar progress={progress} />
+                {/* Separator */}
+                {/*<div style={{borderTop: '2px solid #ccc', margin: '20px 0'}}></div>*/}
+                {/* Feedback Submission */}
+                <div style={{marginTop: '20px', textAlign: 'center'}}>
+                    <button
+                        onClick={handleRelevanceFeedback}
+                        style={buttonStyle}
+                    >
+                        Submit Feedback
+                    </button>
+                </div>
+                <div style={sectionSeparator}></div>
 
                 {/* Feedback Insights */}
                 {updatedDescriptors && (
@@ -167,29 +233,28 @@ const ImageDetailPage = () => {
                         previousDescriptors={previousDescriptors}
                         updatedDescriptors={updatedDescriptors}
                         impact={feedbackImpact}
+                        descriptorNames={descriptorNames}
                     />
                 )}
 
-                {/* Image Annotations */}
-                <AnnotateImages annotations={annotations} setAnnotations={setAnnotations} />
+                {/* Separator */}
+                <div style={{borderTop: '2px solid #ccc', margin: '20px 0'}}></div>
 
-                {/* Feedback Submission */}
-                <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                    <button
-                        onClick={handleRelevanceFeedback}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#4CAF50',
-                            color: '#fff',
-                            borderRadius: '5px',
-                            cursor: 'pointer',
-                            margin: '10px',
-                        }}
-                    >
-                        Submit Feedback
-                    </button>
-                </div>
+                {/* Image Annotations */}
+                {/*<AnnotateImages annotations={annotations} setAnnotations={setAnnotations} />*/}
+
+
             </div>
+
+            {/* Progress Modal */}
+            <Modal
+                isOpen={isProgressModalOpen}
+                style={customStyles}
+                contentLabel="Processing Progress"
+            >
+                <h3>Processing Feedback...</h3>
+                <div className="spinner"></div>
+            </Modal>
 
             {/* Footer */}
             <Footer />
@@ -198,16 +263,5 @@ const ImageDetailPage = () => {
 };
 
 // Inline button styles
-const buttonStyle = {
-    padding: '10px 15px',
-    margin: '5px',
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
-};
 
 export default ImageDetailPage;

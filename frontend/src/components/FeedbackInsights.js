@@ -1,39 +1,31 @@
+// Inside FeedbackInsights.js
+
 import React from 'react';
 
-function FeedbackInsights({ previousDescriptors, updatedDescriptors, impact }) {
-    const descriptorKeys = Object.keys(updatedDescriptors);
-
+const FeedbackInsights = ({ updatedDescriptors, descriptorNames }) => {
     return (
-        <div style={{ marginTop: '40px', textAlign: 'center' }}>
-            <h2>Feedback Insights</h2>
-            <div>
-                <h3>Impact Summary</h3>
-                <p>{impact}</p>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                <div>
-                    <h4>Previous Descriptors</h4>
-                    <ul>
-                        {descriptorKeys.map((key) => (
-                            <li key={key}>
-                                {key}: {previousDescriptors[key]}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <div>
-                    <h4>Updated Descriptors</h4>
-                    <ul>
-                        {descriptorKeys.map((key) => (
-                            <li key={key}>
-                                {key}: {updatedDescriptors[key]}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </div>
+        <div className="feedback-insights">
+            <h3 style={{ textAlign: 'center', fontSize: '2.2rem', marginBottom: '50px' }}>FEEDBACK INSIGHTS</h3>
+            <h4>Impact Summary</h4>
+            <p>Updated rankings based on feedback. Top 5 images refreshed.</p>
+            <table className="feedback-table">
+                <thead>
+                    <tr>
+                        <th>Descriptor</th>
+                        <th>Updated Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {descriptorNames.map((name, index) => (
+                        <tr key={index}>
+                            <td>{name}</td>
+                            <td>{updatedDescriptors[index]}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
-}
+};
 
 export default FeedbackInsights;
